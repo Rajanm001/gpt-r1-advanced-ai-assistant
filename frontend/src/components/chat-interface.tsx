@@ -50,7 +50,7 @@ export default function ChatInterface() {
       // Create conversation if none exists
       if (!conversationId) {
         const newConversation = await createConversation()
-        conversationId = newConversation.id
+        conversationId = newConversation?.id
       }
 
       // Add user message to UI
@@ -199,8 +199,9 @@ export default function ChatInterface() {
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <ReactMarkdown
                     components={{
-                      code({ node, inline, className, children, ...props }) {
+                      code({ node, className, children, ...props }: any) {
                         const match = /language-(\w+)/.exec(className || '')
+                        const inline = !match
                         return !inline && match ? (
                           <SyntaxHighlighter
                             style={oneDark}

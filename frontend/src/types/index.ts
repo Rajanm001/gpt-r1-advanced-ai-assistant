@@ -72,7 +72,7 @@ export interface ChatStore {
   setLoading: (loading: boolean) => void;
   setStreaming: (streaming: boolean) => void;
   setError: (error: string | null) => void;
-  createConversation: (title?: string) => void;
+  createConversation: (title?: string) => Promise<Conversation>;
 }
 
 export interface AuthStore {
