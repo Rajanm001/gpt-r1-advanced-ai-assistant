@@ -1,4 +1,16 @@
-# 🚀 GPT.R1 - Advanced AI Assistant
+"""
+GPT.R1 - GitHub Upload Script
+Author: Rajan Mishra
+Professional GitHub repository setup
+"""
+
+import os
+import subprocess
+import datetime
+
+def create_readme():
+    """Create professional README.md"""
+    readme_content = """# 🚀 GPT.R1 - Advanced AI Assistant
 
 > **Created by Rajan Mishra** - A premium ChatGPT clone that exceeds expectations
 
@@ -55,7 +67,7 @@ cd gpt-r1
 
 # Setup Python environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\\Scripts\\activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -216,3 +228,184 @@ For questions or opportunities, please reach out through GitHub.
 **⭐ Star this repo if you find it helpful!**
 
 *Built with ❤️ by Rajan Mishra*
+"""
+    
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.write(readme_content)
+    print("✅ README.md created")
+
+def create_gitignore():
+    """Create comprehensive .gitignore"""
+    gitignore_content = """# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.next/
+out/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+"""
+    
+    with open(".gitignore", "w", encoding="utf-8") as f:
+        f.write(gitignore_content)
+    print("✅ .gitignore created")
+
+def create_requirements():
+    """Create requirements.txt"""
+    requirements = """fastapi==0.104.1
+uvicorn==0.24.0
+sqlalchemy==2.0.23
+alembic==1.12.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+openai==1.3.5
+duckduckgo-search==3.9.6
+python-dotenv==1.0.0
+pytest==7.4.3
+httpx==0.25.2
+"""
+    
+    with open("requirements.txt", "w") as f:
+        f.write(requirements)
+    print("✅ requirements.txt created")
+
+def git_setup():
+    """Setup git repository"""
+    commands = [
+        "git init",
+        "git add .",
+        "git commit -m \"🚀 Initial commit: GPT.R1 - Advanced AI Assistant by Rajan Mishra\"",
+    ]
+    
+    for cmd in commands:
+        try:
+            result = subprocess.run(cmd.split(), capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"✅ {cmd}")
+            else:
+                print(f"⚠️ {cmd}: {result.stderr}")
+        except Exception as e:
+            print(f"❌ {cmd}: {e}")
+
+def main():
+    print("🚀 GPT.R1 - GitHub Upload Preparation")
+    print("👨‍💻 By Rajan Mishra")
+    print("="*50)
+    
+    print("\n📝 Creating project files...")
+    create_readme()
+    create_gitignore()
+    create_requirements()
+    
+    print("\n🔧 Setting up git repository...")
+    git_setup()
+    
+    print("\n🎯 Next Steps:")
+    print("1. Create GitHub repository: https://github.com/new")
+    print("2. Repository name: 'gpt-r1-advanced-ai-assistant'")
+    print("3. Description: 'Premium ChatGPT clone built with FastAPI & Next.js by Rajan Mishra'")
+    print("4. Add remote: git remote add origin https://github.com/rajanmishra/gpt-r1-advanced-ai-assistant.git")
+    print("5. Push code: git push -u origin main")
+    
+    print("\n🏆 GPT.R1 is ready for GitHub!")
+    print("✨ Professional portfolio-quality code!")
+    print("🎊 Client will be amazed!")
+
+if __name__ == "__main__":
+    main()

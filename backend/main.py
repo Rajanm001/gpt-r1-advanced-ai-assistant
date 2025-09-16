@@ -2,25 +2,24 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
-from app.core.database import engine
+from app.core.database import engine, create_tables
 from app.models import Base
 from app.api.v1 import api_router
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
-
+# Create FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
+    description="GPT.R1 - A premium AI assistant by Rajan Mishra with advanced streaming, RAG capabilities, and enterprise-grade performance",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -28,13 +27,32 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application on startup."""
+    # Create database tables
+    create_tables()
+    print(f"🚀 {settings.PROJECT_NAME} v{settings.VERSION} starting...")
+    print(f"📊 Database: {settings.get_database_url()}")
+    print(f"🤖 OpenAI: {'✅ Configured' if settings.is_openai_configured() else '❌ Not configured (using mock responses)'}")
+    print(f"🔍 Web Search: {'✅ Enabled' if settings.ENABLE_WEB_SEARCH else '❌ Disabled'}")
+
+
 @app.get("/")
 async def root():
     """Root endpoint."""
     return {
-        "message": "ChatGPT Clone API",
+        "message": "GPT.R1 - Advanced AI Assistant API",
         "version": settings.VERSION,
-        "docs": "/docs"
+        "docs": "/docs",
+        "author": "Rajan Mishra",
+        "features": [
+            "Real-time streaming chat",
+            "RAG with web search",
+            "Advanced authentication",
+            "Conversation management",
+            "Enterprise performance"
+        ]
     }
 
 
