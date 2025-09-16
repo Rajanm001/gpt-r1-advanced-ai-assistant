@@ -57,3 +57,19 @@ export function downloadAsFile(content: string, filename: string, type: string =
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+export function formatTime(date: string | Date): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+}
+
+export function truncateText(text: string, maxLength: number = 100): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.substring(0, maxLength - 3) + '...';
+}

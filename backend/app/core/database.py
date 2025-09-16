@@ -4,7 +4,9 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 # Use the smart database URL selection
-database_url = settings.get_database_url()
+database_url = settings.DATABASE_URL
+
+print(f"🗄️ Database URL: {database_url}")
 
 # Configure engine based on database type
 if database_url.startswith("sqlite"):
@@ -14,12 +16,14 @@ if database_url.startswith("sqlite"):
         connect_args={"check_same_thread": False},  # Required for SQLite
         echo=settings.DEBUG  # Show SQL queries in debug mode
     )
+    print("📊 Database: SQLite (Fallback Mode)")
 else:
     # PostgreSQL configuration
     engine = create_engine(
         database_url,
         echo=settings.DEBUG
     )
+    print("🐘 Database: PostgreSQL (Production Mode)")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

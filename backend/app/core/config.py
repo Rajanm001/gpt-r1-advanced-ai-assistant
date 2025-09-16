@@ -17,13 +17,22 @@ class Settings(BaseSettings):
     PORT: int = 8000
     JWT_ALGORITHM: str = "HS256"
     
-    # Database Configuration - SQLite for immediate functionality
-    DATABASE_URL: str = "sqlite:///./chatgpt_clone.db"
-    POSTGRES_DB: str = "chatgpt_clone"
-    POSTGRES_USER: str = "username"
-    POSTGRES_PASSWORD: str = "password"
+    # Database Configuration - PostgreSQL as required by Ankit
+    POSTGRES_DB: str = "gpt_r1_db"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "admin"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
+    
+    # Smart database URL - PostgreSQL primary, SQLite fallback
+    USE_POSTGRESQL: bool = False  # Set to True when PostgreSQL is available
+    
+    @property
+    def DATABASE_URL(self) -> str:
+        if self.USE_POSTGRESQL:
+            return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        else:
+            return "sqlite:///./gpt_r1.db"
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = "test-key-will-be-replaced"
@@ -71,6 +80,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Allow extra fields
 
 
 settings = Settings()
