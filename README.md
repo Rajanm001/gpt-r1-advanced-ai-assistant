@@ -1,6 +1,6 @@
 # 🚀 GPT.R1 - Advanced AI Assistant
 
-> **Created by Rajan Mishra** - A premium ChatGPT clone that exceeds expectations
+> **Created by Rajan Mishra** - A professional ChatGPT clone with enterprise features
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14+-blue.svg)](https://nextjs.org)

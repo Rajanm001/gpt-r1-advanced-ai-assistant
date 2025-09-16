@@ -10,7 +10,7 @@ from app.api.v1 import api_router
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="GPT.R1 - A premium AI assistant by Rajan Mishra with advanced streaming, RAG capabilities, and enterprise-grade performance",
+    description="GPT.R1 - A professional AI assistant with advanced streaming, RAG capabilities, and enterprise-grade performance",
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
