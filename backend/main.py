@@ -1,30 +1,136 @@
+"""
+GPT.R1 - Enhanced FastAPI Application with Advanced Agentic Workflow
+PostgreSQL-powered ChatGPT clone with modular multi-step AI processing
+Created by: Rajan Mishra
+"""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import logging
+from contextlib import asynccontextmanager
+
 from app.core.config import settings
 from app.core.database import engine, create_tables
-from app.models import Base
-from app.api.v1 import api_router
+from app.models.conversation import Base
+from app.api.chat_enhanced import router as chat_router
 
-# Create FastAPI application
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager"""
+    logger.info("🚀 Starting GPT.R1 Enhanced Application...")
+    
+    # Create database tables
+    try:
+        await create_tables()
+        logger.info("✅ Database tables created successfully")
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}")
+        raise
+    
+    # Log startup completion
+    logger.info("🎯 GPT.R1 Enhanced API ready with advanced agentic workflow!")
+    
+    yield
+    
+    # Cleanup on shutdown
+    logger.info("🔄 Shutting down GPT.R1 Enhanced Application...")
+
+# Create FastAPI application with enhanced configuration
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="GPT.R1 - A professional AI assistant with advanced streaming, RAG capabilities, and enterprise-grade performance",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title="GPT.R1 Enhanced API",
+    version="2.0.0",
+    description="""
+    🚀 GPT.R1 - Advanced ChatGPT Clone with Modular Agentic Workflow
+    
+    ## Features
+    - **Advanced Multi-Step Agentic Processing**: Analyze → Search → Synthesize → Validate → Respond
+    - **Real-time Streaming**: Server-Sent Events with workflow progress
+    - **PostgreSQL Database**: Production-ready data persistence (FIXED: No SQLite fallback)
+    - **DuckDuckGo Integration**: Enhanced RAG with internet search capabilities
+    - **Modular Architecture**: Extensible and maintainable codebase
+    - **Workflow Analytics**: Comprehensive execution statistics and monitoring
+    
+    ## Agentic Workflow Steps
+    1. **ANALYZE**: Query intent analysis and requirement determination
+    2. **SEARCH**: External information gathering via DuckDuckGo (when needed)
+    3. **SYNTHESIZE**: Information integration and context building
+    4. **VALIDATE**: Response quality assessment and accuracy verification
+    5. **RESPOND**: Enhanced response generation with workflow metadata
+    
+    ## Technical Stack
+    - FastAPI with async/await support
+    - PostgreSQL with SQLAlchemy ORM
+    - OpenAI GPT integration
+    - Advanced error handling and recovery
+    - Real-time streaming responses
+    
+    Created by: Rajan Mishra
+    """,
+    openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.get_allowed_origins(),
+    allow_origins=[
+        "http://localhost:3000",  # Next.js development
+        "http://localhost:3001",  # Alternative port
+        "https://gpt-r1.vercel.app",  # Production domain
+        "https://*.vercel.app"  # Vercel preview deployments
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Include API router
-app.include_router(api_router, prefix=settings.API_V1_STR)
+# Include enhanced chat router
+app.include_router(chat_router, prefix="/api/v1", tags=["Enhanced Chat"])
+
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint with service information"""
+    return {
+        "service": "GPT.R1 Enhanced API",
+        "version": "2.0.0",
+        "description": "Advanced ChatGPT clone with modular agentic workflow",
+        "features": [
+            "Multi-step agentic processing",
+            "PostgreSQL database (specification compliant)",
+            "Real-time streaming responses", 
+            "DuckDuckGo search integration",
+            "Workflow analytics and monitoring"
+        ],
+        "database": "PostgreSQL (REQUIRED - no SQLite fallback)",
+        "agentic_flow": "Enhanced modular multi-step architecture",
+        "docs": "/api/docs",
+        "redoc": "/api/redoc",
+        "created_by": "Rajan Mishra"
+    }
+
+@app.get("/api", tags=["API Info"])
+async def api_info():
+    """API information endpoint"""
+    return {
+        "api_version": "v1",
+        "endpoints": {
+            "chat_stream": "/api/v1/chat/stream",
+            "conversations": "/api/v1/conversations",
+            "health": "/api/v1/health",
+            "agentic_stats": "/api/v1/agentic/statistics"
+        },
+        "agentic_workflow": {
+            "steps": ["analyze", "search", "synthesize", "validate", "respond"],
+            "features": ["Real-time progress", "Quality validation", "Search integration"]
+        }
+    }
 
 
 @app.on_event("startup")

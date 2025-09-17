@@ -17,22 +17,20 @@ class Settings(BaseSettings):
     PORT: int = 8000
     JWT_ALGORITHM: str = "HS256"
     
-    # Database Configuration - PostgreSQL as required by Ankit
+    # Database Configuration - PostgreSQL as required by specification
     POSTGRES_DB: str = "gpt_r1_db"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "admin"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     
-    # Smart database URL - PostgreSQL primary, SQLite fallback
-    USE_POSTGRESQL: bool = False  # Set to True when PostgreSQL is available
+    # PostgreSQL ONLY - as per specification (no SQLite fallback allowed)
+    USE_POSTGRESQL: bool = True  # MUST be True as per specification
     
     @property
     def DATABASE_URL(self) -> str:
-        if self.USE_POSTGRESQL:
-            return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        else:
-            return "sqlite:///./gpt_r1.db"
+        """PostgreSQL database URL - ONLY PostgreSQL as per specification"""
+        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = "test-key-will-be-replaced"
