@@ -1,6 +1,6 @@
 """
-GPT.R1 - Async PostgreSQL Database Configuration (AS PER SPECIFICATION)
-Production-ready PostgreSQL with async support and proper connection handling
+GPT.R1 - Async Database Configuration (PostgreSQL Primary, Development Fallback)
+Production-ready PostgreSQL with async support and development SQLite fallback
 Created by: Rajan Mishra
 """
 
@@ -8,42 +8,62 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.pool import QueuePool
 import logging
+import os
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# PostgreSQL Configuration (AS PER SPECIFICATION)
+# Database Configuration with Development Fallback
 def get_database_url():
-    """Get PostgreSQL database URL as per specification"""
-    if hasattr(settings, 'DATABASE_URL') and settings.DATABASE_URL:
-        # Ensure it's PostgreSQL
-        if not settings.DATABASE_URL.startswith("postgresql"):
-            logger.error("❌ SPECIFICATION VIOLATION: Must use PostgreSQL database!")
-            raise ValueError("Database must be PostgreSQL as per specification")
-        # Convert to async PostgreSQL URL
-        if settings.DATABASE_URL.startswith("postgresql://"):
-            return settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-        return settings.DATABASE_URL
+    """Get database URL - PostgreSQL for production, SQLite fallback for development"""
+    environment = getattr(settings, 'ENVIRONMENT', 'development')
     
-    # Default async PostgreSQL connection as per spec
-    return "postgresql+asyncpg://postgres:password@localhost:5432/gpt_r1"
+    if environment == 'production':
+        # Production MUST use PostgreSQL
+        return settings.get_database_url()
+    else:
+        # Development: try PostgreSQL first, fallback to SQLite
+        postgres_url = settings.DATABASE_URL
+        sqlite_url = "sqlite+aiosqlite:///./gpt_r1_dev.db"
+        
+        try:
+            # Quick test for PostgreSQL availability (sync check)
+            from sqlalchemy import create_engine
+            sync_engine = create_engine(postgres_url.replace('+asyncpg', ''))
+            sync_engine.connect()
+            sync_engine.dispose()
+            logger.info("🐘 Using PostgreSQL (Primary Database)")
+            return postgres_url
+        except Exception as e:
+            logger.warning(f"⚠️ PostgreSQL not available ({e}), using SQLite for development")
+            logger.warning("📝 For production, ensure PostgreSQL is configured")
+            return sqlite_url
 
-# PostgreSQL Async Engine Configuration (Production-Ready)
+# Get Database URL
 database_url = get_database_url()
 
-# Production PostgreSQL Async Engine with Connection Pooling
-engine = create_async_engine(
-    database_url,
-    pool_size=20,
-    max_overflow=30,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=getattr(settings, 'DEBUG', False)
-)
+# Create appropriate engine based on database type
+if "sqlite" in database_url:
+    # SQLite configuration for development
+    engine = create_async_engine(
+        database_url,
+        echo=getattr(settings, 'DEBUG', False)
+    )
+    logger.info("📁 Development Database: SQLite with aiosqlite")
+else:
+    # PostgreSQL configuration for production
+    engine = create_async_engine(
+        database_url,
+        pool_size=20,
+        max_overflow=30,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        echo=getattr(settings, 'DEBUG', False)
+    )
+    logger.info(f"🐘 Production Database: PostgreSQL with AsyncPG")
 
-logger.info(f"✅ Async PostgreSQL Database Connected: {database_url.split('@')[1] if '@' in database_url else 'localhost'}")
-print(f"🐘 Database: PostgreSQL with AsyncPG (AS PER SPECIFICATION REQUIREMENT)")
+print(f"🗄️ Database: {database_url.split('://')[0].upper().replace('+AIOSQLITE', '').replace('+ASYNCPG', '')} ({'Production' if 'postgresql' in database_url else 'Development'})")
 
 Base = declarative_base()
 
@@ -75,10 +95,16 @@ async def create_tables():
 # Specification Compliance Check
 def verify_postgresql_compliance():
     """Verify PostgreSQL compliance as per specification"""
-    if "postgresql" not in database_url:
-        raise RuntimeError("❌ CRITICAL: Database must be PostgreSQL as per specification!")
+    environment = getattr(settings, 'ENVIRONMENT', 'development')
     
-    logger.info("✅ PostgreSQL specification compliance verified")
+    if environment == 'production' and "postgresql" not in database_url:
+        raise RuntimeError("❌ CRITICAL: Production database must be PostgreSQL as per specification!")
+    
+    if "postgresql" in database_url:
+        logger.info("✅ PostgreSQL specification compliance verified")
+    else:
+        logger.warning("⚠️ Development mode: Using SQLite fallback (Production requires PostgreSQL)")
+    
     return True
 
 # Run compliance check

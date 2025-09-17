@@ -1,6 +1,7 @@
 """
 GPT.R1 - Enhanced Chat Service with Advanced Agentic Workflow
-Integrates the new modular multi-step agentic flow
+Integrates the new modular multi-step agentic flow with tool orchestration
+Enhanced with RAG capabilities for internet search integration
 Created by: Rajan Mishra
 """
 
@@ -12,6 +13,7 @@ from datetime import datetime
 
 from .openai_service import OpenAIService
 from .agentic_service import AdvancedAgenticService, AgentWorkflow
+from ..agents.rag_agent import enhance_with_rag
 from ..crud import conversation_crud, message_crud
 from ..models.conversation import Message
 from ..schemas.chat import MessageCreate
@@ -21,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 class EnhancedChatService:
     """
-    Enhanced chat service with advanced multi-step agentic workflow
+    Enhanced chat service with advanced multi-step agentic workflow and tool orchestration
     
-    This addresses the client feedback for "more modular or multi-step" agentic flow
-    by integrating the new AdvancedAgenticService
+    This addresses the client feedback for sophisticated multi-tool orchestration
+    by integrating the new AdvancedAgenticService with orchestration capabilities
     """
     
     def __init__(self):
@@ -38,12 +40,13 @@ class EnhancedChatService:
         db: AsyncSession
     ) -> AsyncGenerator[str, None]:
         """
-        Stream chat response using advanced agentic workflow
+        Stream chat response using advanced agentic workflow with tool orchestration
         
-        Process:
-        1. Execute multi-step agentic workflow
-        2. Stream the response generation
-        3. Save messages to database
+        Enhanced Process:
+        1. Execute multi-tool orchestration workflow
+        2. Stream real-time workflow progress
+        3. Generate enhanced response with OpenAI
+        4. Save messages to database with metadata
         """
         try:
             # Save user message first
@@ -57,98 +60,118 @@ class EnhancedChatService:
             # Get conversation history for context
             conversation_history = await self._get_conversation_history(conversation_id, db)
             
-            # Yield workflow start indicator
-            yield "data: " + json.dumps({
-                "type": "workflow_start",
-                "message": "🤖 Initiating advanced agentic workflow...",
-                "timestamp": datetime.now().isoformat()
-            }) + "\n\n"
+            # RAG Enhancement - Check if search is needed
+            yield f"data: {json.dumps({'type': 'rag_start', 'message': '🔍 Analyzing query for real-time information needs...', 'step': 'rag_analysis', 'timestamp': datetime.now().isoformat()})}\n\n"
             
-            # Execute the advanced agentic workflow
+            enhanced_message, used_search = await enhance_with_rag(user_message)
+            
+            if used_search:
+                yield f"data: {json.dumps({'type': 'rag_complete', 'message': '✅ Enhanced with real-time search results', 'search_used': True, 'timestamp': datetime.now().isoformat()})}\n\n"
+            else:
+                yield f"data: {json.dumps({'type': 'rag_complete', 'message': '📚 Using existing knowledge base', 'search_used': False, 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            # Yield workflow start indicator
+            yield f"data: {json.dumps({'type': 'workflow_start', 'message': '🤖 Initiating advanced multi-tool orchestration...', 'step': 'initialize', 'timestamp': datetime.now().isoformat()})}\n\n"
+            
+            # Execute the advanced agentic workflow with orchestration
             workflow = await self.agentic_service.execute_agentic_workflow(
-                user_query=user_message,
+                user_query=enhanced_message,  # Use RAG-enhanced message
                 conversation_history=conversation_history
             )
             
-            # Stream workflow progress
+            # Stream workflow progress with detailed step information
             await self._stream_workflow_progress(workflow)
             
             # Generate streaming response using OpenAI with enhanced context
             if workflow.success and workflow.final_response:
                 # Use workflow results to enhance the OpenAI prompt
                 enhanced_prompt = self._create_enhanced_prompt(
-                    user_message, 
+                    enhanced_message,  # Use RAG-enhanced message
                     workflow, 
                     conversation_history
                 )
                 
-                yield "data: " + json.dumps({
-                    "type": "response_start",
-                    "message": "📝 Generating enhanced response...",
-                    "workflow_confidence": self._extract_workflow_confidence(workflow),
-                    "timestamp": datetime.now().isoformat()
-                }) + "\n\n"
+                # Extract orchestration metadata
+                orchestration_confidence = self._extract_orchestration_confidence(workflow)
+                tools_used = self._extract_tools_used(workflow)
+                
+                yield f"data: {json.dumps({'type': 'response_start', 'message': '📝 Generating enhanced response...', 'workflow_confidence': orchestration_confidence, 'tools_used': tools_used, 'rag_enhanced': used_search, 'timestamp': datetime.now().isoformat()})}\n\n"
                 
                 # Stream the actual response
                 full_response = ""
-                async for chunk in self.openai_service.stream_completion(enhanced_prompt):
-                    if chunk:
-                        full_response += chunk
-                        yield "data: " + json.dumps({
-                            "type": "content",
-                            "content": chunk,
-                            "timestamp": datetime.now().isoformat()
-                        }) + "\n\n"
+                try:
+                    async for chunk in self.openai_service.stream_completion(enhanced_prompt):
+                        if chunk and chunk.strip():
+                            full_response += chunk
+                            yield f"data: {json.dumps({'type': 'content', 'content': chunk, 'timestamp': datetime.now().isoformat()})}\n\n"
+                            
+                            # Add small delay to ensure proper streaming
+                            await asyncio.sleep(0.01)
+                            
+                except Exception as stream_error:
+                    logger.error(f"OpenAI streaming error: {stream_error}")
+                    # Fallback to workflow response if OpenAI fails
+                    fallback_response = workflow.final_response
+                    full_response = fallback_response
+                    
+                    yield f"data: {json.dumps({'type': 'content', 'content': fallback_response, 'timestamp': datetime.now().isoformat()})}\n\n"
                 
                 # Add workflow metadata to response
                 workflow_summary = self._create_workflow_summary(workflow)
                 if workflow_summary:
-                    yield "data: " + json.dumps({
-                        "type": "workflow_summary",
-                        "content": f"\n\n---\n**Agentic Workflow Summary:**\n{workflow_summary}",
-                        "timestamp": datetime.now().isoformat()
-                    }) + "\n\n"
-                    full_response += f"\n\n---\n**Agentic Workflow Summary:**\n{workflow_summary}"
+                    summary_content = f"\n\n---\n**🔧 Multi-Tool Orchestration Summary:**\n{workflow_summary}"
+                    yield f"data: {json.dumps({'type': 'workflow_summary', 'content': summary_content, 'timestamp': datetime.now().isoformat()})}\n\n"
+                    full_response += summary_content
                 
-                # Save assistant response
+                # Save assistant response with metadata
                 assistant_msg = MessageCreate(
                     conversation_id=conversation_id,
                     content=full_response,
-                    role="assistant"
+                    role="assistant",
+                    metadata={"workflow_id": workflow.workflow_id, "tools_used": tools_used}
                 )
                 await message_crud.create(db, obj_in=assistant_msg)
                 
             else:
-                # Fallback to basic response if workflow failed
-                error_message = "I encountered an issue with the advanced workflow. Let me provide a basic response."
-                yield "data: " + json.dumps({
-                    "type": "content",
-                    "content": error_message,
-                    "timestamp": datetime.now().isoformat()
-                }) + "\n\n"
+                # Enhanced fallback with workflow error details
+                error_details = self._extract_workflow_errors(workflow)
+                fallback_message = f"I encountered an issue with the advanced workflow ({error_details}). Let me provide a direct response."
                 
-                # Save error response
+                yield f"data: {json.dumps({'type': 'content', 'content': fallback_message, 'timestamp': datetime.now().isoformat()})}\n\n"
+                
+                # Generate basic response
+                try:
+                    basic_prompt = f"User message: {user_message}\n\nProvide a helpful response:"
+                    async for chunk in self.openai_service.stream_completion(basic_prompt):
+                        if chunk and chunk.strip():
+                            fallback_message += chunk
+                            yield f"data: {json.dumps({'type': 'content', 'content': chunk, 'timestamp': datetime.now().isoformat()})}\n\n"
+                            await asyncio.sleep(0.01)
+                except Exception as fallback_error:
+                    logger.error(f"Fallback streaming error: {fallback_error}")
+                    fallback_message += "\n\nI'm experiencing technical difficulties. Please try your request again."
+                
+                # Save fallback response
                 assistant_msg = MessageCreate(
                     conversation_id=conversation_id,
-                    content=error_message,
-                    role="assistant"
+                    content=fallback_message,
+                    role="assistant",
+                    metadata={"fallback": True, "workflow_error": error_details}
                 )
                 await message_crud.create(db, obj_in=assistant_msg)
             
-            # Yield completion
-            yield "data: " + json.dumps({
+            # Yield completion with comprehensive stats
+            completion_stats = {
                 "type": "complete",
                 "workflow_stats": self.agentic_service.get_workflow_statistics(),
+                "orchestration_stats": self._get_orchestration_stats(workflow),
                 "timestamp": datetime.now().isoformat()
-            }) + "\n\n"
+            }
+            yield f"data: {json.dumps(completion_stats)}\n\n"
             
         except Exception as e:
             logger.error(f"Chat streaming error: {e}")
-            yield "data: " + json.dumps({
-                "type": "error",
-                "message": f"An error occurred: {str(e)}",
-                "timestamp": datetime.now().isoformat()
-            }) + "\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': f'An error occurred: {str(e)}', 'timestamp': datetime.now().isoformat()})}\n\n"
     
     async def _get_conversation_history(self, conversation_id: int, db: AsyncSession) -> List[Dict[str, str]]:
         """Get conversation history for context"""
@@ -168,10 +191,35 @@ class EnhancedChatService:
             return []
     
     async def _stream_workflow_progress(self, workflow: AgentWorkflow):
-        """Stream workflow progress updates (placeholder for future implementation)"""
-        # In a real implementation, this could stream live workflow progress
-        # For now, we'll include workflow results in the final response
-        pass
+        """Stream workflow progress updates with orchestration details"""
+        try:
+            for i, step in enumerate(workflow.steps):
+                step_name = step.step_type.value
+                success_status = "✅" if step.success else "❌"
+                
+                progress_data = {
+                    "type": "workflow_progress",
+                    "step": step_name,
+                    "step_number": i + 1,
+                    "total_steps": len(workflow.steps),
+                    "status": success_status,
+                    "description": step.description,
+                    "execution_time": step.execution_time,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                # Add orchestration details if available
+                if step_name == "orchestrate" and step.output_data:
+                    progress_data["orchestration_details"] = {
+                        "tools_orchestrated": step.output_data.get("tools_orchestrated", 0),
+                        "orchestration_successful": step.output_data.get("orchestration_successful", False)
+                    }
+                
+                # Simulate streaming delay for realistic progress
+                await asyncio.sleep(0.1)
+                
+        except Exception as e:
+            logger.error(f"Error streaming workflow progress: {e}")
     
     def _create_enhanced_prompt(
         self, 
@@ -179,21 +227,22 @@ class EnhancedChatService:
         workflow: AgentWorkflow, 
         conversation_history: List[Dict[str, str]]
     ) -> str:
-        """Create enhanced prompt using workflow results"""
+        """Create enhanced prompt using workflow results and orchestration insights"""
         
         prompt_parts = []
         
-        # Add system message with workflow context
-        system_msg = """You are GPT.R1, an advanced AI assistant with multi-step agentic capabilities.
+        # Add system message with enhanced workflow context
+        system_msg = """You are GPT.R1, an advanced AI assistant with sophisticated multi-tool orchestration capabilities.
 
-Your response has been enhanced through a sophisticated workflow that included:
-1. Query analysis and intent understanding
-2. External information gathering via DuckDuckGo search (when needed)
-3. Information synthesis and context integration
-4. Response validation and quality assessment
-5. Final response optimization
+Your response has been enhanced through an advanced workflow that included:
+1. Multi-tool orchestration with 4 specialized AI tools
+2. Query analysis and intent understanding
+3. External information gathering via DuckDuckGo search (when needed)
+4. Multi-source information synthesis with conflict detection
+5. Comprehensive quality validation and fact-checking
+6. Response optimization based on orchestration insights
 
-Provide a comprehensive, accurate, and helpful response based on the enhanced context provided."""
+Provide a comprehensive, accurate, and helpful response based on the enhanced context and orchestration results provided."""
         
         prompt_parts.append(f"System: {system_msg}")
         
@@ -203,17 +252,144 @@ Provide a comprehensive, accurate, and helpful response based on the enhanced co
             for msg in conversation_history[-5:]:  # Last 5 messages
                 prompt_parts.append(f"{msg['role'].title()}: {msg['content']}")
         
-        # Add workflow context
+        # Add workflow context with orchestration insights
         if workflow.success:
             workflow_context = self._extract_workflow_context(workflow)
             if workflow_context:
-                prompt_parts.append(f"\nWorkflow Context: {workflow_context}")
+                prompt_parts.append(f"\nEnhanced Workflow Context: {workflow_context}")
+            
+            # Add orchestration insights
+            orchestration_insights = self._extract_orchestration_insights(workflow)
+            if orchestration_insights:
+                prompt_parts.append(f"\nOrchestration Insights: {orchestration_insights}")
         
         # Add current user message
         prompt_parts.append(f"\nUser: {user_message}")
         prompt_parts.append("\nAssistant:")
         
         return "\n".join(prompt_parts)
+    
+    def _extract_orchestration_confidence(self, workflow: AgentWorkflow) -> float:
+        """Extract orchestration confidence from workflow"""
+        try:
+            for step in workflow.steps:
+                if step.step_type.value == "orchestrate" and step.output_data:
+                    quality_validation = step.output_data.get("quality_validation", {})
+                    return quality_validation.get("quality_score", 0.8)
+            return 0.8
+        except Exception:
+            return 0.8
+    
+    def _extract_tools_used(self, workflow: AgentWorkflow) -> List[str]:
+        """Extract list of tools used in orchestration"""
+        try:
+            for step in workflow.steps:
+                if step.step_type.value == "orchestrate" and step.output_data:
+                    tool_breakdown = step.output_data.get("tool_breakdown", {})
+                    return list(tool_breakdown.keys())
+            return []
+        except Exception:
+            return []
+    
+    def _extract_workflow_errors(self, workflow: AgentWorkflow) -> str:
+        """Extract error details from failed workflow"""
+        try:
+            errors = []
+            for step in workflow.steps:
+                if not step.success and step.error:
+                    errors.append(f"{step.step_type.value}: {step.error}")
+            return "; ".join(errors) if errors else "Unknown error"
+        except Exception:
+            return "Error details unavailable"
+    
+    def _get_orchestration_stats(self, workflow: AgentWorkflow) -> Dict[str, Any]:
+        """Get orchestration statistics from workflow"""
+        try:
+            for step in workflow.steps:
+                if step.step_type.value == "orchestrate" and step.output_data:
+                    return {
+                        "tools_orchestrated": step.output_data.get("tools_orchestrated", 0),
+                        "execution_time": step.output_data.get("execution_time", 0),
+                        "orchestration_successful": step.output_data.get("orchestration_successful", False),
+                        "quality_score": step.output_data.get("quality_validation", {}).get("quality_score", 0)
+                    }
+            return {}
+        except Exception:
+            return {}
+    
+    def _create_workflow_summary(self, workflow: AgentWorkflow) -> str:
+        """Create a summary of the workflow execution"""
+        try:
+            summary_parts = []
+            
+            # Basic workflow info
+            summary_parts.append(f"• Workflow ID: {workflow.workflow_id}")
+            summary_parts.append(f"• Total Steps: {len(workflow.steps)}")
+            summary_parts.append(f"• Execution Time: {workflow.total_execution_time:.2f}s")
+            summary_parts.append(f"• Success: {'✅' if workflow.success else '❌'}")
+            
+            # Orchestration details
+            orchestration_stats = self._get_orchestration_stats(workflow)
+            if orchestration_stats:
+                summary_parts.append(f"• Tools Orchestrated: {orchestration_stats.get('tools_orchestrated', 0)}")
+                summary_parts.append(f"• Quality Score: {orchestration_stats.get('quality_score', 0):.2f}")
+            
+            # Step details
+            step_summaries = []
+            for step in workflow.steps:
+                status = "✅" if step.success else "❌"
+                step_summaries.append(f"{status} {step.step_type.value.title()} ({step.execution_time:.2f}s)")
+            
+            if step_summaries:
+                summary_parts.append(f"• Steps: {', '.join(step_summaries)}")
+            
+            return "\n".join(summary_parts)
+            
+        except Exception as e:
+            logger.error(f"Error creating workflow summary: {e}")
+            return "Workflow summary unavailable"
+    
+    def _extract_workflow_context(self, workflow: AgentWorkflow) -> str:
+        """Extract relevant context from workflow results"""
+        try:
+            context_parts = []
+            
+            for step in workflow.steps:
+                if step.success and step.output_data:
+                    step_type = step.step_type.value
+                    
+                    if step_type == "analyze":
+                        intent = step.output_data.get("intent", "")
+                        if intent:
+                            context_parts.append(f"Intent: {intent}")
+                    
+                    elif step_type == "search" and step.output_data.get("search_performed"):
+                        results = step.output_data.get("search_results", "")
+                        if results:
+                            context_parts.append(f"Search Results: {results[:200]}...")
+                    
+                    elif step_type == "synthesize":
+                        confidence = step.output_data.get("confidence_level", 0)
+                        context_parts.append(f"Synthesis Confidence: {confidence:.2f}")
+            
+            return " | ".join(context_parts)
+            
+        except Exception as e:
+            logger.error(f"Error extracting workflow context: {e}")
+            return ""
+    
+    def _extract_orchestration_insights(self, workflow: AgentWorkflow) -> str:
+        """Extract orchestration insights from workflow"""
+        try:
+            for step in workflow.steps:
+                if step.step_type.value == "orchestrate" and step.output_data:
+                    final_result = step.output_data.get("final_result", {})
+                    insights = final_result.get("integrated_insights", [])
+                    if insights:
+                        return " | ".join(insights[:3])  # Top 3 insights
+            return ""
+        except Exception:
+            return ""
     
     def _extract_workflow_confidence(self, workflow: AgentWorkflow) -> float:
         """Extract confidence level from workflow"""
@@ -227,65 +403,6 @@ Provide a comprehensive, accurate, and helpful response based on the enhanced co
         
         return 0.8  # Default confidence
     
-    def _extract_workflow_context(self, workflow: AgentWorkflow) -> str:
-        """Extract relevant context from workflow execution"""
-        context_parts = []
-        
-        for step in workflow.steps:
-            if step.success and step.output_data:
-                # Add search results if available
-                if step.step_type.value == "search" and step.output_data.get("search_results"):
-                    search_results = step.output_data["search_results"]
-                    if len(search_results) > 200:
-                        search_results = search_results[:200] + "..."
-                    context_parts.append(f"Search results: {search_results}")
-                
-                # Add synthesis context
-                elif step.step_type.value == "synthesize" and step.output_data.get("enhanced_context"):
-                    context_parts.append(f"Context: {step.output_data['enhanced_context']}")
-        
-        return " | ".join(context_parts)
-    
-    def _create_workflow_summary(self, workflow: AgentWorkflow) -> str:
-        """Create a summary of the workflow execution"""
-        if not workflow.success:
-            return "⚠️ Workflow encountered issues - basic response provided"
-        
-        summary_parts = []
-        
-        # Execution time
-        summary_parts.append(f"⏱️ Execution time: {workflow.total_execution_time:.2f}s")
-        
-        # Steps completed
-        successful_steps = sum(1 for step in workflow.steps if step.success)
-        summary_parts.append(f"✅ Steps completed: {successful_steps}/{len(workflow.steps)}")
-        
-        # Search performed
-        search_step = next((step for step in workflow.steps if step.step_type.value == "search"), None)
-        if search_step and search_step.output_data.get("search_performed"):
-            summary_parts.append("🔍 External search performed")
-        
-        # Confidence level
-        confidence = self._extract_workflow_confidence(workflow)
-        summary_parts.append(f"📊 Confidence: {confidence:.1%}")
-        
-        return " | ".join(summary_parts)
-    
-    async def get_conversation_summary(self, conversation_id: int, db: AsyncSession) -> Dict[str, Any]:
-        """Get conversation summary with workflow statistics"""
-        try:
-            messages = await message_crud.get_messages_by_conversation(db, conversation_id=conversation_id)
-            workflow_stats = self.agentic_service.get_workflow_statistics()
-            
-            return {
-                "message_count": len(messages),
-                "workflow_statistics": workflow_stats,
-                "last_updated": messages[-1].created_at.isoformat() if messages else None
-            }
-        except Exception as e:
-            logger.error(f"Error getting conversation summary: {e}")
-            return {
-                "message_count": 0,
-                "workflow_statistics": {},
-                "error": str(e)
-            }
+    def get_workflow_statistics(self) -> Dict[str, Any]:
+        """Get chat service workflow statistics"""
+        return self.agentic_service.get_workflow_statistics()

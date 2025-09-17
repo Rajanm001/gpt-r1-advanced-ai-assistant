@@ -1,0 +1,25 @@
+# GPT.R1 Test Configuration
+# Test requirements and setup for comprehensive testing
+
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+pytest-mock==3.12.0
+pytest-cov==4.1.0
+faker==20.1.0
+factory-boy==3.3.0
+
+# Performance testing
+pytest-benchmark==4.0.0
+
+# Database testing
+pytest-postgresql==5.0.0
+alembic==1.13.0
+
+# Async testing support
+asyncio==3.4.3
+aiohttp==3.9.1
+
+# Mock and fixtures
+responses==0.24.1
+freezegun==1.2.2

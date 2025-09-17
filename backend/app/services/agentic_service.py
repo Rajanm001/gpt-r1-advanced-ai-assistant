@@ -1,6 +1,6 @@
 """
 GPT.R1 - Advanced Multi-Step Agentic AI System
-Modular agentic flow with DuckDuckGo search integration
+Enhanced modular agentic flow with multi-tool orchestration
 Created by: Rajan Mishra
 """
 
@@ -12,11 +12,13 @@ import logging
 from datetime import datetime
 
 from .rag_service import RAGService
+from .multi_tool_orchestrator import AdvancedToolOrchestrator
 
 logger = logging.getLogger(__name__)
 
 class AgentStepType(Enum):
     """Types of agent steps in the workflow"""
+    ORCHESTRATE = "orchestrate"  # NEW: Multi-tool orchestration step
     ANALYZE = "analyze"
     SEARCH = "search"
     SYNTHESIZE = "synthesize"
@@ -46,25 +48,27 @@ class AgentWorkflow:
 
 class AdvancedAgenticService:
     """
-    Advanced multi-step agentic AI system with modular workflow
+    Advanced multi-step agentic AI system with multi-tool orchestration
     
-    This addresses the feedback for "more modular or multi-step" agentic flow
+    Enhanced to address feedback for sophisticated multi-tool orchestration
     """
     
     def __init__(self):
         self.rag_service = RAGService()
+        self.orchestrator = AdvancedToolOrchestrator()  # NEW: Multi-tool orchestrator
         self.workflow_history = []
     
     async def execute_agentic_workflow(self, user_query: str, conversation_history: List[Dict] = None) -> AgentWorkflow:
         """
-        Execute complete multi-step agentic workflow
+        Execute enhanced multi-step agentic workflow with tool orchestration
         
-        Steps:
-        1. ANALYZE - Understand query intent and requirements
-        2. SEARCH - Gather relevant information if needed
-        3. SYNTHESIZE - Combine information with context
-        4. VALIDATE - Check response quality and accuracy
-        5. RESPOND - Generate final response
+        Enhanced Steps:
+        1. ORCHESTRATE - Multi-tool workflow planning and execution
+        2. ANALYZE - Deep query intent analysis
+        3. SEARCH - Advanced information gathering
+        4. SYNTHESIZE - Sophisticated information integration
+        5. VALIDATE - Comprehensive quality validation
+        6. RESPOND - Enhanced response generation
         """
         workflow_id = f"workflow_{datetime.now().timestamp()}"
         workflow = AgentWorkflow(
@@ -76,23 +80,31 @@ class AdvancedAgenticService:
         start_time = datetime.now()
         
         try:
-            # Step 1: ANALYZE - Query Intent Analysis
-            analyze_step = await self._step_analyze_query(user_query, conversation_history)
+            # Step 1: ORCHESTRATE - Multi-Tool Workflow Orchestration (NEW)
+            orchestrate_step = await self._step_orchestrate_tools(user_query, conversation_history)
+            workflow.steps.append(orchestrate_step)
+            
+            if not orchestrate_step.success:
+                logger.warning("Orchestration step failed, falling back to traditional workflow")
+            
+            # Step 2: ANALYZE - Enhanced Query Intent Analysis
+            analyze_step = await self._step_analyze_query(user_query, conversation_history, orchestrate_step.output_data)
             workflow.steps.append(analyze_step)
             
             if not analyze_step.success:
                 return await self._handle_workflow_failure(workflow, "Analysis step failed")
             
-            # Step 2: SEARCH - Information Gathering (if needed)
-            search_step = await self._step_search_information(analyze_step.output_data)
+            # Step 3: SEARCH - Advanced Information Gathering
+            search_step = await self._step_search_information(analyze_step.output_data, orchestrate_step.output_data)
             workflow.steps.append(search_step)
             
-            # Step 3: SYNTHESIZE - Information Integration
+            # Step 4: SYNTHESIZE - Sophisticated Information Integration
             synthesize_step = await self._step_synthesize_information(
                 user_query, 
                 analyze_step.output_data,
                 search_step.output_data if search_step.success else {},
-                conversation_history
+                conversation_history,
+                orchestrate_step.output_data  # Include orchestration results
             )
             workflow.steps.append(synthesize_step)
             
@@ -125,20 +137,79 @@ class AdvancedAgenticService:
         
         return workflow
     
-    async def _step_analyze_query(self, user_query: str, conversation_history: List[Dict] = None) -> AgentStep:
+    async def _step_orchestrate_tools(self, user_query: str, conversation_history: List[Dict] = None) -> AgentStep:
         """
-        Step 1: Analyze user query to understand intent and requirements
+        Step 1: Multi-tool orchestration for sophisticated workflow planning
         """
         step = AgentStep(
-            step_type=AgentStepType.ANALYZE,
-            description="Analyze query intent and determine information needs",
+            step_type=AgentStepType.ORCHESTRATE,
+            description="Orchestrate multiple AI tools for comprehensive query processing",
             input_data={"query": user_query, "history": conversation_history or []}
         )
         
         start_time = datetime.now()
         
         try:
-            # Analyze query characteristics
+            # Prepare context for orchestrator
+            context = {
+                "conversation_history": conversation_history or [],
+                "sources": []
+            }
+            
+            # Execute multi-tool orchestration
+            orchestration_result = await self.orchestrator.orchestrate_workflow(user_query, context)
+            
+            if orchestration_result["success"]:
+                step.output_data = {
+                    "orchestration_successful": True,
+                    "workflow_id": orchestration_result["workflow_id"],
+                    "tools_orchestrated": orchestration_result["tools_orchestrated"],
+                    "execution_time": orchestration_result["execution_time"],
+                    "final_result": orchestration_result["final_result"],
+                    "quality_validation": orchestration_result["quality_validation"],
+                    "tool_breakdown": orchestration_result["tool_breakdown"],
+                    "orchestration_metadata": orchestration_result["orchestration_metadata"]
+                }
+                step.success = True
+                
+                logger.info(f"Multi-tool orchestration completed: {orchestration_result['tools_orchestrated']} tools orchestrated")
+            else:
+                step.output_data = {
+                    "orchestration_successful": False,
+                    "error": orchestration_result.get("error", "Unknown orchestration error"),
+                    "fallback_to_traditional": True
+                }
+                step.success = False
+                logger.warning("Multi-tool orchestration failed, will fallback to traditional workflow")
+                
+        except Exception as e:
+            step.error = str(e)
+            step.output_data = {
+                "orchestration_successful": False,
+                "error": str(e),
+                "fallback_to_traditional": True
+            }
+            logger.error(f"Tool orchestration failed: {e}")
+        
+        finally:
+            step.execution_time = (datetime.now() - start_time).total_seconds()
+        
+        return step
+    
+    async def _step_analyze_query(self, user_query: str, conversation_history: List[Dict] = None, orchestration_data: Dict[str, Any] = None) -> AgentStep:
+        """
+        Step 2: Enhanced analyze user query with orchestration insights
+        """
+        step = AgentStep(
+            step_type=AgentStepType.ANALYZE,
+            description="Enhanced query analysis with orchestration insights",
+            input_data={"query": user_query, "history": conversation_history or [], "orchestration": orchestration_data or {}}
+        )
+        
+        start_time = datetime.now()
+        
+        try:
+            # Enhanced analysis with orchestration insights
             analysis = {
                 "query_type": self._classify_query_type(user_query),
                 "requires_search": self._requires_external_search(user_query),
@@ -147,28 +218,39 @@ class AdvancedAgenticService:
                 "intent": self._extract_user_intent(user_query)
             }
             
+            # Enhance with orchestration data if available
+            if orchestration_data and orchestration_data.get("orchestration_successful"):
+                analysis.update({
+                    "orchestration_enhanced": True,
+                    "tools_used": orchestration_data.get("tools_orchestrated", 0),
+                    "orchestration_confidence": orchestration_data.get("quality_validation", {}).get("quality_score", 0),
+                    "multi_tool_insights": orchestration_data.get("final_result", {}).get("integrated_insights", [])
+                })
+            else:
+                analysis["orchestration_enhanced"] = False
+            
             step.output_data = analysis
             step.success = True
             
-            logger.info(f"Query analysis completed: {analysis['query_type']}, search_needed: {analysis['requires_search']}")
+            logger.info(f"Enhanced query analysis completed: {analysis['query_type']}, orchestration_enhanced: {analysis['orchestration_enhanced']}")
             
         except Exception as e:
             step.error = str(e)
-            logger.error(f"Query analysis failed: {e}")
+            logger.error(f"Enhanced query analysis failed: {e}")
         
         finally:
             step.execution_time = (datetime.now() - start_time).total_seconds()
         
         return step
     
-    async def _step_search_information(self, analysis_data: Dict[str, Any]) -> AgentStep:
+    async def _step_search_information(self, analysis_data: Dict[str, Any], orchestration_data: Dict[str, Any] = None) -> AgentStep:
         """
-        Step 2: Search for external information if needed
+        Step 3: Enhanced search for external information with orchestration insights
         """
         step = AgentStep(
             step_type=AgentStepType.SEARCH,
-            description="Search for relevant external information",
-            input_data=analysis_data
+            description="Enhanced search with orchestration insights",
+            input_data={"analysis": analysis_data, "orchestration": orchestration_data or {}}
         )
         
         start_time = datetime.now()
@@ -209,31 +291,43 @@ class AdvancedAgenticService:
         
         return step
     
-    async def _step_synthesize_information(self, user_query: str, analysis: Dict, search_data: Dict, history: List[Dict]) -> AgentStep:
+    async def _step_synthesize_information(self, user_query: str, analysis: Dict, search_data: Dict, history: List[Dict], orchestration_data: Dict = None) -> AgentStep:
         """
-        Step 3: Synthesize all available information
+        Step 4: Enhanced synthesize all available information with orchestration insights
         """
         step = AgentStep(
             step_type=AgentStepType.SYNTHESIZE,
-            description="Combine and synthesize all available information",
+            description="Enhanced synthesis with multi-tool orchestration insights",
             input_data={
                 "query": user_query,
                 "analysis": analysis,
                 "search_data": search_data,
-                "history": history
+                "history": history,
+                "orchestration": orchestration_data or {}
             }
         )
         
         start_time = datetime.now()
         
         try:
-            # Create comprehensive context
+            # Enhanced synthesis with orchestration insights
             synthesis = {
-                "enhanced_context": self._build_enhanced_context(analysis, search_data, history),
-                "response_strategy": self._determine_response_strategy(analysis),
-                "confidence_level": self._calculate_confidence_level(analysis, search_data),
-                "information_sources": self._identify_information_sources(search_data)
+                "enhanced_context": self._build_enhanced_context(analysis, search_data, history, orchestration_data),
+                "response_strategy": self._determine_response_strategy(analysis, orchestration_data),
+                "confidence_level": self._calculate_confidence_level(analysis, search_data, orchestration_data),
+                "information_sources": self._identify_information_sources(search_data, orchestration_data)
             }
+            
+            # Include orchestration insights if available
+            if orchestration_data and orchestration_data.get("orchestration_successful"):
+                synthesis.update({
+                    "orchestration_enhanced": True,
+                    "multi_tool_insights": orchestration_data.get("final_result", {}).get("integrated_insights", []),
+                    "tool_contributions": orchestration_data.get("final_result", {}).get("tool_contributions", {}),
+                    "orchestration_confidence": orchestration_data.get("quality_validation", {}).get("quality_score", 0)
+                })
+            else:
+                synthesis["orchestration_enhanced"] = False
             
             step.output_data = synthesis
             step.success = True
@@ -378,8 +472,8 @@ class AdvancedAgenticService:
         quality = min(len(search_results) / 1000, 1.0)  # Normalize to 0-1
         return quality
     
-    def _build_enhanced_context(self, analysis: Dict, search_data: Dict, history: List[Dict]) -> str:
-        """Build enhanced context from all sources"""
+    def _build_enhanced_context(self, analysis: Dict, search_data: Dict, history: List[Dict], orchestration_data: Dict = None) -> str:
+        """Build enhanced context from all sources including orchestration"""
         context_parts = []
         
         if history:
@@ -388,10 +482,19 @@ class AdvancedAgenticService:
         if search_data.get("search_performed") and search_data.get("search_results"):
             context_parts.append(f"External information: {search_data['search_results'][:500]}...")
         
+        # Include orchestration context
+        if orchestration_data and orchestration_data.get("orchestration_successful"):
+            tools_used = orchestration_data.get("tools_orchestrated", 0)
+            context_parts.append(f"Multi-tool orchestration: {tools_used} tools coordinated")
+            
+            insights = orchestration_data.get("final_result", {}).get("integrated_insights", [])
+            if insights:
+                context_parts.append(f"Orchestration insights: {', '.join(insights[:3])}")
+        
         return " | ".join(context_parts)
     
-    def _determine_response_strategy(self, analysis: Dict) -> str:
-        """Determine the best strategy for response generation"""
+    def _determine_response_strategy(self, analysis: Dict, orchestration_data: Dict = None) -> str:
+        """Determine the best strategy for response generation with orchestration enhancement"""
         query_type = analysis.get("query_type", "general")
         
         strategy_map = {
@@ -402,10 +505,18 @@ class AdvancedAgenticService:
             "general": "conversational_response"
         }
         
-        return strategy_map.get(query_type, "conversational_response")
+        base_strategy = strategy_map.get(query_type, "conversational_response")
+        
+        # Enhance strategy based on orchestration results
+        if orchestration_data and orchestration_data.get("orchestration_successful"):
+            tools_used = orchestration_data.get("tools_orchestrated", 0)
+            if tools_used >= 3:
+                base_strategy = f"multi_tool_enhanced_{base_strategy}"
+        
+        return base_strategy
     
-    def _calculate_confidence_level(self, analysis: Dict, search_data: Dict) -> float:
-        """Calculate confidence level for the response"""
+    def _calculate_confidence_level(self, analysis: Dict, search_data: Dict, orchestration_data: Dict = None) -> float:
+        """Calculate confidence level with orchestration enhancement"""
         base_confidence = 0.7
         
         if search_data.get("search_performed") and search_data.get("search_results"):
@@ -414,16 +525,35 @@ class AdvancedAgenticService:
         if analysis.get("complexity") == "simple":
             base_confidence += 0.1
         
+        # Boost confidence with successful orchestration
+        if orchestration_data and orchestration_data.get("orchestration_successful"):
+            orchestration_confidence = orchestration_data.get("quality_validation", {}).get("quality_score", 0)
+            tools_used = orchestration_data.get("tools_orchestrated", 0)
+            
+            # Add confidence boost based on orchestration success
+            confidence_boost = (orchestration_confidence * 0.2) + (tools_used * 0.05)
+            base_confidence += min(confidence_boost, 0.25)  # Max 25% boost
+        
         return min(base_confidence, 1.0)
     
-    def _identify_information_sources(self, search_data: Dict) -> List[str]:
-        """Identify sources of information used"""
+    def _identify_information_sources(self, search_data: Dict, orchestration_data: Dict = None) -> List[str]:
+        """Identify sources of information used including orchestration tools"""
         sources = []
         
         if search_data.get("search_performed"):
             sources.append("DuckDuckGo Search")
         
         sources.append("AI Knowledge Base")
+        
+        # Add orchestration tool sources
+        if orchestration_data and orchestration_data.get("orchestration_successful"):
+            tool_breakdown = orchestration_data.get("tool_breakdown", {})
+            for tool_name, tool_result in tool_breakdown.items():
+                if tool_result.get("success"):
+                    tool_type = tool_result.get("tool_type", "unknown")
+                    sources.append(f"Multi-Tool Orchestration: {tool_name} ({tool_type})")
+        
+        return sources
         
         return sources
     

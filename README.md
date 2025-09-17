@@ -36,7 +36,7 @@ GPT.R1 is a comprehensive, production-ready ChatGPT clone built with modern tech
 
 - **Database Migrations**: Proper Alembic migrations for PostgreSQL- 🔐 **JWT Authentication** - Secure user management and session handling
 
-- **Performance Optimization**: Connection pooling, caching, and query optimization- 💾 **Conversation Persistence** - SQLite database with proper schema design
+- **Performance Optimization**: Connection pooling, caching, and query optimization- 💾 **Conversation Persistence** - PostgreSQL database with proper schema design
 
 - **Monitoring & Logging**: Structured logging and performance metrics- 🎨 **Modern UI/UX** - Beautiful interface with dark mode and mobile responsiveness
 
@@ -54,7 +54,7 @@ GPT.R1 is a comprehensive, production-ready ChatGPT clone built with modern tech
 
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐- **Framework**: FastAPI with async/await support
 
-│   Frontend      │    │    Backend      │    │   Database      │- **Database**: SQLite with Alembic migrations
+│   Frontend      │    │    Backend      │    │   Database      │- **Database**: PostgreSQL with Alembic migrations
 
 │   (Next.js)     │◄──►│   (FastAPI)     │◄──►│ (PostgreSQL)    │- **Authentication**: JWT tokens with secure password hashing
 
@@ -260,7 +260,7 @@ OPENAI_API_KEY=your-openai-api-key
 
 REDIS_HOST=localhostSECRET_KEY=your_secret_key
 
-REDIS_PORT=6379DATABASE_URL=sqlite:///./gpt_r1.db
+REDIS_PORT=6379DATABASE_URL=postgresql+asyncpg://postgres:admin@localhost:5432/gpt_r1_db
 
 REDIS_DB=0```
 

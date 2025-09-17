@@ -3,8 +3,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import ChatInterface from '@/components/chat-interface'
-import ConversationSidebar from '@/components/conversation-sidebar'
+import EnhancedChatInterface from '@/components/enhanced-chat-interface'
+import EnhancedConversationSidebar from '@/components/enhanced-conversation-sidebar'
 import Header from '@/components/header'
 import AuthModal from '@/components/auth-modal'
 
@@ -30,14 +30,14 @@ export default function HomePage() {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div className="w-80 border-r border-border flex-shrink-0">
-        <ConversationSidebar />
+        <EnhancedConversationSidebar />
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         <Header />
         <div className="flex-1">
-          {isAuthenticated ? <ChatInterface /> : <AuthModal />}
+          {isAuthenticated ? <EnhancedChatInterface /> : <AuthModal />}
         </div>
       </div>
     </div>

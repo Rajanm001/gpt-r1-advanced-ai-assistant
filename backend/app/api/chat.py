@@ -7,6 +7,7 @@ Created by: Rajan Mishra
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional, Dict, Any, AsyncGenerator
 import json
@@ -15,6 +16,10 @@ import logging
 from datetime import datetime
 
 from ..core.database import get_db
+from ..core.dependencies import get_current_user
+from ..models.user import User
+from ..models.conversation import Conversation
+from ..models.message import Message
 from ..services.chat_service import EnhancedChatService
 from ..crud import conversation_crud, message_crud
 from ..schemas.chat import ChatRequest, ConversationCreate, ConversationSummary
@@ -446,11 +451,9 @@ async def list_conversations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List all conversations for current user with pagination"""
+    """List all conversations with pagination"""
     try:
-        conversations = db.query(Conversation).filter(
-            Conversation.user_id == current_user.id
-        ).order_by(
+        conversations = db.query(Conversation).order_by(
             Conversation.updated_at.desc()
         ).offset(skip).limit(limit).all()
         

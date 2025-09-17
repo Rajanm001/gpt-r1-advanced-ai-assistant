@@ -13,9 +13,11 @@ import logging
 from datetime import datetime
 
 from ..core.database import get_db
+from ..core.dependencies import get_current_active_user
 from ..services.chat_service import EnhancedChatService
 from ..crud import conversation_crud, message_crud
-from ..schemas.chat import ChatRequest, ConversationCreate, ConversationSummary
+from ..schemas.chat import ChatRequest, ConversationCreate, ConversationUpdate, ConversationSummary
+from ..models.user import User
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -49,11 +51,11 @@ async def stream_chat(
     Stream chat response with advanced agentic workflow
     
     Features:
-    - Multi-step agentic processing (analyze → search → synthesize → validate → respond)
-    - DuckDuckGo search integration when needed
+    - Multi-step agentic processing with tool orchestration
     - Real-time workflow progress streaming
     - PostgreSQL conversation persistence
-    - Enhanced context awareness
+    - Enhanced error handling and recovery
+    - Proper SSE formatting
     """
     try:
         # Validate request
@@ -81,8 +83,12 @@ async def stream_chat(
         
         # Stream response using enhanced agentic workflow
         async def generate_stream():
-            """Generate streaming response with agentic workflow"""
+            """Generate streaming response with proper SSE formatting"""
             try:
+                # Send initial connection acknowledgment
+                yield f"data: {json.dumps({'type': 'connected', 'conversation_id': conversation_id, 'timestamp': datetime.now().isoformat()})}\n\n"
+                
+                # Stream the chat response
                 async for chunk in chat_service.stream_chat_response(
                     conversation_id=conversation_id,
                     user_message=request.message,
@@ -90,22 +96,25 @@ async def stream_chat(
                 ):
                     yield chunk
                     
+                # Send final completion marker
+                yield f"data: {json.dumps({'type': 'stream_complete', 'timestamp': datetime.now().isoformat()})}\n\n"
+                    
             except Exception as e:
                 logger.error(f"Streaming error: {e}")
-                error_chunk = "data: " + json.dumps({
-                    "type": "error",
-                    "message": f"Stream error: {str(e)}",
-                    "timestamp": datetime.now().isoformat()
-                }) + "\n\n"
+                error_chunk = f"data: {json.dumps({'type': 'error', 'message': f'Stream error: {str(e)}', 'timestamp': datetime.now().isoformat()})}\n\n"
                 yield error_chunk
+                # Send error completion
+                yield f"data: {json.dumps({'type': 'error_complete', 'timestamp': datetime.now().isoformat()})}\n\n"
         
         return StreamingResponse(
             generate_stream(),
-            media_type="text/plain",
+            media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "Content-Type": "text/plain; charset=utf-8"
+                "Content-Type": "text/event-stream",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "Cache-Control"
             }
         )
         
@@ -138,14 +147,43 @@ async def create_conversation(
 async def get_conversations(
     skip: int = 0,
     limit: int = 20,
-    db: AsyncSession = Depends(get_db)
+    sort_by: str = "updated_at",
+    sort_order: str = "desc",
+    search: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
 ):
-    """Get conversation list with summaries"""
+    """Get conversation list with summaries, pagination, sorting, and search"""
     try:
+        # Validate pagination parameters
+        if skip < 0:
+            skip = 0
+        if limit <= 0 or limit > 100:
+            limit = 20
+        if sort_by not in ["created_at", "updated_at", "title"]:
+            sort_by = "updated_at"
+        if sort_order not in ["asc", "desc"]:
+            sort_order = "desc"
+            
         conversations = await conversation_crud.get_conversation_summaries(
-            db, skip=skip, limit=limit
+            db, skip=skip, limit=limit, sort_by=sort_by, sort_order=sort_order, search=search
         )
-        return conversations
+        
+        # Return paginated response with metadata
+        return {
+            "conversations": conversations,
+            "pagination": {
+                "skip": skip,
+                "limit": limit,
+                "total": len(conversations),
+                "has_more": len(conversations) == limit
+            },
+            "sorting": {
+                "sort_by": sort_by,
+                "sort_order": sort_order
+            },
+            "search": search
+        }
     except Exception as e:
         logger.error(f"Get conversations error: {e}")
         raise HTTPException(
@@ -229,6 +267,33 @@ async def delete_conversation(
         raise HTTPException(
             status_code=500, 
             detail="Failed to delete conversation"
+        )
+
+
+@router.put("/conversations/{conversation_id}")
+async def update_conversation(
+    conversation_id: int,
+    conversation_update: ConversationUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update conversation title and other properties"""
+    try:
+        conversation = await conversation_crud.get(db, id=conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        updated_conversation = await conversation_crud.update(
+            db, db_obj=conversation, obj_in=conversation_update
+        )
+        return updated_conversation
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update conversation error: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail="Failed to update conversation"
         )
 
 @router.get("/agentic/statistics")

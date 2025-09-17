@@ -30,7 +30,7 @@ Create `.env` files in both directories:
 **Backend (.env):**
 ```
 OPENAI_API_KEY=your_key_here
-DATABASE_URL=sqlite:///./gpt_r1.db
+DATABASE_URL=postgresql+asyncpg://postgres:admin@localhost:5432/gpt_r1_db
 SECRET_KEY=your_secret_key
 ```
 

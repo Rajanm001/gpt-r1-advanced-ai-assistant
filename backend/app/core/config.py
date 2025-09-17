@@ -29,8 +29,8 @@ class Settings(BaseSettings):
     
     @property
     def DATABASE_URL(self) -> str:
-        """PostgreSQL database URL - ONLY PostgreSQL as per specification"""
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        """PostgreSQL database URL with AsyncPG driver - ONLY PostgreSQL as per specification"""
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
     
     # OpenAI Configuration
     OPENAI_API_KEY: str = "test-key-will-be-replaced"
@@ -53,15 +53,14 @@ class Settings(BaseSettings):
     MAX_SEARCH_RESULTS: int = 5
     
     def get_database_url(self) -> str:
-        """Get the appropriate database URL with fallback to SQLite."""
-        # Check if PostgreSQL URL is provided and we're in production
-        if (self.ENVIRONMENT.lower() == "production" and 
-            "postgresql://" in self.DATABASE_URL and 
-            self.DATABASE_URL != "postgresql://username:password@localhost:5432/chatgpt_clone"):
-            return self.DATABASE_URL
-        else:
-            # Use SQLite for development and testing
-            return "sqlite:///./chatgpt_clone.db"
+        """Get PostgreSQL database URL - ONLY PostgreSQL allowed as per specification."""
+        if not self.DATABASE_URL:
+            raise ValueError("DATABASE_URL is required and must be PostgreSQL")
+        
+        if not self.DATABASE_URL.startswith(("postgresql://", "postgresql+asyncpg://")):
+            raise ValueError("Database must be PostgreSQL - SQLite is not allowed per specification")
+            
+        return self.DATABASE_URL
     
     def is_openai_configured(self) -> bool:
         """Check if OpenAI API key is properly configured."""

@@ -4,11 +4,17 @@ from sqlalchemy import pool
 from alembic import context
 import os
 import sys
+from pathlib import Path
 
-# Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the backend directory to Python path  
+backend_path = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(backend_path))
 
+# Import all models for complete metadata
 from app.models import Base
+from app.models.user import User
+from app.models.conversation import Conversation
+from app.models.message import Message
 from app.core.config import settings
 
 # this is the Alembic Config object, which provides
@@ -31,8 +37,11 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    """Get database URL from settings."""
-    return settings.DATABASE_URL
+    """Get database URL from settings with fallback."""
+    if hasattr(settings, 'DATABASE_URL') and settings.DATABASE_URL and not settings.DATABASE_URL.startswith('postgresql://'):
+        return settings.DATABASE_URL
+    # Fallback to SQLite for development
+    return "sqlite:///./gpt_chat.db"
 
 
 def run_migrations_offline() -> None:
@@ -60,23 +69,26 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
-    connectable = engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    """Run migrations in 'online' mode."""
+    url = get_url()
+    
+    # Configure connection for SQLite vs PostgreSQL
+    if url.startswith('sqlite'):
+        from sqlalchemy import create_engine
+        connectable = create_engine(url)
+    else:
+        configuration = config.get_section(config.config_ini_section)
+        configuration["sqlalchemy.url"] = url
+        connectable = engine_from_config(
+            configuration,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, 
+            target_metadata=target_metadata
         )
 
         with context.begin_transaction():

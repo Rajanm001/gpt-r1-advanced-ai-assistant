@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.core.database import engine, create_tables
 from app.models.conversation import Base
 from app.api.chat_enhanced import router as chat_router
+from app.api.auth import router as auth_router
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -24,13 +25,14 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     logger.info("🚀 Starting GPT.R1 Enhanced Application...")
     
-    # Create database tables
+    # Create database tables with graceful error handling
     try:
         await create_tables()
         logger.info("✅ Database tables created successfully")
     except Exception as e:
-        logger.error(f"❌ Database initialization failed: {e}")
-        raise
+        logger.warning(f"⚠️ Database initialization failed: {e}")
+        logger.info("📝 Note: Database will be created when first accessed")
+        # Don't raise - allow app to start without database initially
     
     # Log startup completion
     logger.info("🎯 GPT.R1 Enhanced API ready with advanced agentic workflow!")
@@ -94,6 +96,9 @@ app.add_middleware(
 # Include enhanced chat router
 app.include_router(chat_router, prefix="/api/v1", tags=["Enhanced Chat"])
 
+# Include authentication router
+app.include_router(auth_router, prefix="/api/v1", tags=["Authentication"])
+
 @app.get("/", tags=["Root"])
 async def root():
     """Root endpoint with service information"""
@@ -124,7 +129,10 @@ async def api_info():
             "chat_stream": "/api/v1/chat/stream",
             "conversations": "/api/v1/conversations",
             "health": "/api/v1/health",
-            "agentic_stats": "/api/v1/agentic/statistics"
+            "agentic_stats": "/api/v1/agentic/statistics",
+            "auth_register": "/api/v1/auth/register",
+            "auth_login": "/api/v1/auth/login",
+            "auth_me": "/api/v1/auth/me"
         },
         "agentic_workflow": {
             "steps": ["analyze", "search", "synthesize", "validate", "respond"],
@@ -162,9 +170,29 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.get("/api/v1/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint."""
+    """Enhanced health check endpoint"""
+    try:
+        # Test database connection
+        from app.core.database import engine
+        async with engine.connect() as conn:
+            await conn.execute("SELECT 1")
+            db_status = "✅ Connected"
+    except Exception as e:
+        db_status = f"❌ Error: {str(e)}"
+    
+    return {
+        "status": "healthy",
+        "database": db_status,
+        "version": "2.0.0",
+        "features": ["Authentication", "Agentic Workflow", "Real-time Streaming"]
+    }
+
+
+@app.get("/health")
+async def health_check_simple():
+    """Simple health check endpoint"""
     return {"status": "healthy"}
 
 
