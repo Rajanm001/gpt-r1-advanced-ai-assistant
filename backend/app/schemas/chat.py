@@ -81,6 +81,13 @@ class ConversationSummary(BaseModel):
     last_message_at: Optional[datetime] = None
     created_at: datetime
 
+class ConversationResponse(ConversationInDB):
+    """Response schema for conversation operations"""
+    messages: List[Message] = []
+    
+    class Config:
+        from_attributes = True
+
 # Chat-specific schemas
 class ChatRequest(BaseModel):
     """Chat request schema"""
