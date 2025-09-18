@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "name": "gpt-r1-advanced-ai-assistant",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "outputDirectory": "frontend/.next"
+      }
+    },
+    {
+      "src": "backend/main.py",
+      "use": "@vercel/python",
+      "config": {
+        "runtime": "python3.11"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "@openai-api-key",
+    "SECRET_KEY": "@secret-key",
+    "DATABASE_URL": "@database-url"
+  },
+  "functions": {
+    "backend/main.py": {
+      "maxDuration": 30
+    }
+  }
+}

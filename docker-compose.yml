@@ -1,69 +1,119 @@
 version: '3.8'
 
 services:
+  # ================================
   # PostgreSQL Database
-  postgres:
-    image: postgres:15
-    container_name: chatgpt_postgres
+  # ================================
+  database:
+    image: postgres:15-alpine
+    container_name: gpt-r1-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: chatgpt_clone
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-gpt_r1_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - chatgpt_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U username -d chatgpt_clone"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gpt_r1_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - gpt-r1-network
 
-  # FastAPI Backend
+  # ================================
+  # Backend API Service
+  # ================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: chatgpt_backend
+    container_name: gpt-r1-backend
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://username:password@postgres:5432/chatgpt_clone
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      # Database Configuration
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-admin}@database:5432/${POSTGRES_DB:-gpt_r1_db}
+      
+      # OpenAI Configuration (REQUIRED)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      
+      # Security Configuration
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      
+      # Application Configuration
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-false}
+      HOST: 0.0.0.0
+      PORT: 8000
+      
+      # CORS Configuration
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,https://yourdomain.com}
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
-      - chatgpt_network
+      - gpt-r1-network
     volumes:
       - ./backend:/app
+      - /app/__pycache__
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
+  # ================================
   # Next.js Frontend
+  # ================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: chatgpt_frontend
+    container_name: gpt-r1-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-GPT.R1 Professional}
     ports:
       - "3000:3000"
-    depends_on:
-      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
-      - chatgpt_network
+      - gpt-r1-network
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
 
+# ================================
+# Volumes
+# ================================
 volumes:
   postgres_data:
+    driver: local
 
+# ================================
+# Networks
+# ================================
 networks:
-  chatgpt_network:
+  gpt-r1-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

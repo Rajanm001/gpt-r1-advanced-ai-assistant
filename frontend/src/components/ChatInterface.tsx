@@ -8,7 +8,9 @@ import { Send, User, Bot, AlertCircle, Loader2, Search } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Message {
   id?: number;
@@ -205,29 +207,64 @@ export default function ChatInterface() {
     }
   };
 
-  const MessageContent = ({ content }: { content: string }) => (
+  const MessageContent = ({ content, isDark = false }: { content: string; isDark?: boolean }) => (
     <ReactMarkdown
-      className="prose prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-800 prose-pre:text-gray-100"
+      remarkPlugins={[remarkGfm]}
+      className="prose prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-gray-700"
       components={{
         code({ node, inline, className, children, ...props }) {
-          const match = /language-(\\w+)/.exec(className || "");
+          const match = /language-(\w+)/.exec(className || "");
           return !inline && match ? (
             <SyntaxHighlighter
-              style={oneDark}
+              style={isDark ? oneDark : oneLight}
               language={match[1]}
               PreTag="div"
-              className="rounded-md"
+              className="rounded-md !bg-transparent"
+              customStyle={{
+                margin: 0,
+                background: 'transparent',
+              }}
               {...props}
             >
-              {String(children).replace(/\\n$/, "")}
+              {String(children).replace(/\n$/, "")}
             </SyntaxHighlighter>
           ) : (
             <code
-              className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm"
+              className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono"
               {...props}
             >
               {children}
             </code>
+          );
+        },
+        blockquote({ children }) {
+          return (
+            <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-600 dark:text-gray-300 my-2">
+              {children}
+            </blockquote>
+          );
+        },
+        table({ children }) {
+          return (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 my-4">
+                {children}
+              </table>
+            </div>
+          );
+        },
+        th({ children }) {
+          return (
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800">
+              {children}
+            </th>
+          );
+        },
+        td({ children }) {
+          return (
+            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+              {children}
+            </td>
           );
         },
       }}
@@ -279,30 +316,52 @@ export default function ChatInterface() {
 
         {messages.map((message, index) => (
           <div key={index} className="flex items-start space-x-4">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                message.role === "user"
-                  ? "bg-blue-500"
-                  : "bg-gradient-to-r from-purple-500 to-pink-500"
-              }`}
-            >
-              {message.role === "user" ? (
-                <User className="w-4 h-4 text-white" />
-              ) : (
-                <Bot className="w-4 h-4 text-white" />
-              )}
-            </div>
-            <Card className="flex-1 border-0 shadow-sm bg-white dark:bg-gray-800">
+            <Avatar className="w-10 h-10 flex-shrink-0">
+              <AvatarImage
+                src={
+                  message.role === "user"
+                    ? "/user-avatar.png"
+                    : "/ai-assistant-avatar.png"
+                }
+                alt={message.role === "user" ? "User" : "AI Assistant"}
+              />
+              <AvatarFallback
+                className={`text-white font-semibold ${
+                  message.role === "user"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                    : "bg-gradient-to-r from-purple-500 to-pink-500"
+                }`}
+              >
+                {message.role === "user" ? (
+                  <User className="w-5 h-5" />
+                ) : (
+                  <Bot className="w-5 h-5" />
+                )}
+              </AvatarFallback>
+            </Avatar>
+            <Card className="flex-1 border-0 shadow-sm bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {message.role === "user" ? "You" : "Assistant"}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center">
+                    {message.role === "user" ? (
+                      <>
+                        <User className="w-4 h-4 mr-2" />
+                        You
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="w-4 h-4 mr-2" />
+                        GPT.R1 Assistant
+                      </>
+                    )}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
-                <MessageContent content={message.content} />
+                <div className="text-gray-900 dark:text-gray-100">
+                  <MessageContent content={message.content} isDark={false} />
+                </div>
               </CardContent>
             </Card>
           </div>

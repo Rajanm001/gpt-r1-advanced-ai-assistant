@@ -1,0 +1,50 @@
+{
+  "name": "GPT.R1 Advanced AI Assistant",
+  "description": "Enterprise-grade ChatGPT clone with real-time streaming, PostgreSQL persistence, and beautiful UI",
+  "repository": "https://github.com/Rajanm001/gpt-r1-advanced-ai-assistant",
+  "logo": "https://avatars.githubusercontent.com/u/your-avatar",
+  "keywords": ["chatgpt", "ai", "assistant", "fastapi", "nextjs", "postgresql", "streaming"],
+  "success_url": "/",
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "Your OpenAI API key for GPT integration",
+      "required": true
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for JWT token generation",
+      "generator": "secret"
+    },
+    "ENVIRONMENT": {
+      "value": "production"
+    },
+    "DEBUG": {
+      "value": "false"
+    },
+    "ALLOWED_ORIGINS": {
+      "description": "Allowed CORS origins",
+      "value": "https://your-app.herokuapp.com"
+    }
+  },
+  "scripts": {
+    "postdeploy": "python backend/migrations/upgrade.py"
+  }
+}

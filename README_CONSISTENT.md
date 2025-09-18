@@ -9,13 +9,6 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Build Status](https://github.com/Rajanm001/gpt-r1-advanced-ai-assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Rajanm001/gpt-r1-advanced-ai-assistant/actions)
 
-## 🚀 One-Click Deployment
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/your-template)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Rajanm001/gpt-r1-advanced-ai-assistant)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Rajanm001/gpt-r1-advanced-ai-assistant&env=OPENAI_API_KEY,DATABASE_URL,SECRET_KEY)
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Rajanm001/gpt-r1-advanced-ai-assistant)
-
 GPT.R1 is an enterprise-grade AI assistant built with modern technologies, featuring real-time streaming, advanced RAG capabilities, and a beautiful user interface. This project demonstrates full-stack development expertise and professional software engineering practices.
 
 ## ✨ Key Features
@@ -161,29 +154,6 @@ NEXT_PUBLIC_APP_NAME=GPT.R1 Advanced AI Assistant
 NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id
 ```
 
-## 🔄 Live Streaming Proof
-
-**Visual proof that GPT.R1 streaming works perfectly!**
-
-```bash
-# Quick streaming test
-curl -X POST "http://localhost:8000/api/v1/chat/stream" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Count from 1 to 10", "conversation_id": "YOUR_CONV_ID"}' \
-  --no-buffer
-```
-
-**You will see real-time chunks flowing:**
-```
-data: {"type": "chunk", "content": "1"}
-data: {"type": "chunk", "content": ", 2"}
-data: {"type": "chunk", "content": ", 3"}
-...
-```
-
-📖 **[Complete Streaming Demo Guide](./STREAMING_PROOF.md)** - Step-by-step testing with curl scripts and visual examples.
-
 ## 🧪 Testing
 
 Run the comprehensive test suite:
@@ -234,8 +204,7 @@ curl -X POST "http://localhost:8000/api/v1/chat/stream" \
   -d '{"message": "Hello, how are you?", "conversation_id": "uuid"}'
 ```
 
-📖 **[Complete API Documentation](./API.md)** - Real request/response examples for every endpoint.
-📖 **[Error Handling Guide](./ERROR_HANDLING.md)** - Comprehensive error scenarios with JSON examples.
+For complete API documentation, visit: http://localhost:8000/docs
 
 ## 🐳 Docker Deployment
 
