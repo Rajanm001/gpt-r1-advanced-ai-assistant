@@ -20,8 +20,8 @@ from app.core.security import create_access_token
 from app.models.user import User
 from app.models.conversation import Conversation, Message
 
-# Test database setup
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:admin@localhost:5432/test_gpt_r1_db"
+# Test database setup - Use SQLite for testing (CI-compatible)
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

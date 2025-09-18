@@ -62,7 +62,8 @@ jobs:
       run: |
         cd backend
         # Run only working tests that don't require actual database connections
-        python -m pytest tests/test_api.py tests/test_mocked.py tests/test_verification.py tests/test_standalone.py -v --tb=short || echo "Some tests failed but continuing"
+        python -m pytest tests/test_verification.py tests/test_mocked.py tests/test_standalone.py tests/test_api.py -v --tb=short --disable-warnings
+        echo "✅ Backend tests completed successfully"
         
     - name: Run additional test validation
       run: |
