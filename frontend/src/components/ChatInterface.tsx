@@ -212,9 +212,10 @@ export default function ChatInterface() {
       remarkPlugins={[remarkGfm]}
       className="prose prose-sm max-w-none dark:prose-invert prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-gray-700"
       components={{
-        code({ node, inline, className, children, ...props }) {
+        code({ node, className, children, ...props }: any) {
           const match = /language-(\w+)/.exec(className || "");
-          return !inline && match ? (
+          const isInline = !match;
+          return !isInline && match ? (
             <SyntaxHighlighter
               style={isDark ? oneDark : oneLight}
               language={match[1]}
