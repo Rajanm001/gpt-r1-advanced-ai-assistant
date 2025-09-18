@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch, AsyncMock
 import json
 from datetime import datetime, timedelta
 
-from app.main import app
+from main import app
 from app.core.database import get_db, Base
 from app.core.security import create_access_token
 from app.models.user import User

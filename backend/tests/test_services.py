@@ -9,11 +9,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 import json
 
-from backend.app.services.chat_service import EnhancedChatService
-from backend.app.services.agentic_service import AdvancedAgenticService
-from backend.app.services.multi_tool_orchestrator import AdvancedToolOrchestrator
-from backend.app.services.openai_service import OpenAIService
-from backend.app.services.rag_service import RAGService
+from app.services.chat_service import EnhancedChatService
+from app.services.agentic_service import AdvancedAgenticService
+from app.services.multi_tool_orchestrator import AdvancedToolOrchestrator
+from app.services.openai_service import OpenAIService
+from app.services.rag_service import RAGService
 
 class TestChatService:
     """Test enhanced chat service functionality"""

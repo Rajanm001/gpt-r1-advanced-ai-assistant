@@ -11,8 +11,8 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from httpx import AsyncClient
 from fastapi.testclient import TestClient
 
-from backend.main import app
-from backend.tests.conftest import (
+from main import app
+from tests.conftest import (
     TestDataGenerator, MockAgenticService, MockOrchestrator,
     TestUtilities, async_test, integration_test
 )

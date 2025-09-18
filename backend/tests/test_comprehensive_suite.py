@@ -18,11 +18,11 @@ import tempfile
 import os
 
 # Import our application
-from backend.main import app
-from backend.app.core.database import get_db, Base
-from backend.app.services.chat_service import EnhancedChatService
-from backend.app.services.agentic_service import AdvancedAgenticService
-from backend.app.services.multi_tool_orchestrator import AdvancedToolOrchestrator
+from main import app
+from app.core.database import get_db, Base
+from app.services.chat_service import EnhancedChatService
+from app.services.agentic_service import AdvancedAgenticService
+from app.services.multi_tool_orchestrator import AdvancedToolOrchestrator
 from backend.app.schemas.chat import ChatRequest, MessageCreate
 from backend.app.crud import conversation_crud, message_crud
 

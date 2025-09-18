@@ -11,11 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from unittest.mock import patch, MagicMock
 
-from backend.app.core.database import Base, get_db
-from backend.app.models.conversation import Conversation
-from backend.app.models.message import Message
-from backend.app.crud import conversation_crud, message_crud
-from backend.app.schemas.chat import ConversationCreate, MessageCreate, ConversationUpdate
+from app.core.database import Base, get_db
+from app.models.conversation import Conversation
+from app.models.message import Message
+from app.crud import conversation_crud, message_crud
+from app.schemas.chat import ConversationCreate, MessageCreate, ConversationUpdate
 
 # Test database configuration
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:admin@localhost:5432/test_gpt_r1_db"
