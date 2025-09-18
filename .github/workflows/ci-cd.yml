@@ -58,12 +58,27 @@ jobs:
         echo "SECRET_KEY=test-secret-key-for-ci" >> $GITHUB_ENV
         echo "OPENAI_API_KEY=test-key" >> $GITHUB_ENV
 
-    - name: Run backend tests (with mocking)
+    - name: Run backend tests (ultra-robust CI setup)
       run: |
         cd backend
-        # Run only working tests that don't require actual database connections
-        python -m pytest tests/test_verification.py tests/test_mocked.py tests/test_standalone.py tests/test_api.py -v --tb=short --disable-warnings
-        echo "✅ Backend tests completed successfully"
+        echo "🔍 Starting backend tests with ultra-robust configuration..."
+        
+        # Install additional CI dependencies
+        pip install aiosqlite || echo "aiosqlite already installed"
+        
+        # Run ultra-simple tests first (guaranteed to pass)
+        echo "📋 Running basic CI tests..."
+        python -m pytest tests/test_ci_basic.py -v --tb=short --disable-warnings
+        
+        # Run other working tests
+        echo "📋 Running core functionality tests..."
+        python -m pytest tests/test_verification.py tests/test_mocked.py tests/test_standalone.py -v --tb=short --disable-warnings
+        
+        # Run API tests 
+        echo "📋 Running API tests..."
+        python -m pytest tests/test_api.py -v --tb=short --disable-warnings
+        
+        echo "✅ All backend tests completed successfully"
         
     - name: Run additional test validation
       run: |
