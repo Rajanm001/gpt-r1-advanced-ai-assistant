@@ -1,3 +1,26 @@
 {
-  "css.lint.unknownAtRules": "ignore"
+    "python.defaultInterpreterPath": "python",
+    "python.analysis.extraPaths": [
+        "./backend",
+        "./backend/app"
+    ],
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "pylance.insidersChannel": "off",
+    "python.terminal.activateEnvironment": true,
+    "css.validate": false,
+    "scss.validate": false,
+    "less.validate": false,
+    "css.customData": [".vscode/css_custom_data.json"],
+    "files.associations": {
+        "*.css": "tailwindcss"
+    },
+    "editor.quickSuggestions": {
+        "strings": true
+    },
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "html"
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }

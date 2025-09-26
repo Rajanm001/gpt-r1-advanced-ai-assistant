@@ -7,7 +7,7 @@ from app.services.chat_service import ChatService
 from app.services.conversation_service import ConversationService
 import json
 import asyncio
-from typing import AsyncGenerator
+from typing import AsyncGenerator, cast
 
 router = APIRouter()
 
@@ -28,13 +28,16 @@ async def stream_chat(
         new_conversation = conversation_service.create_conversation(
             ConversationCreate(title=chat_request.message[:50] + "..." if len(chat_request.message) > 50 else chat_request.message)
         )
-        conversation_id = new_conversation.id
+        conversation_id = cast(int, new_conversation.id)  # Cast to int for type safety
+    
+    # Ensure conversation_id is an int
+    conversation_id_int = cast(int, conversation_id)
     
     # Save user message
     user_message = MessageCreate(
         role="user",
         content=chat_request.message,
-        conversation_id=conversation_id
+        conversation_id=conversation_id_int
     )
     conversation_service.add_message(user_message)
     
@@ -47,7 +50,7 @@ async def stream_chat(
             messages.append({"role": msg.role, "content": msg.content})
     else:
         # Get from database
-        db_messages = conversation_service.get_conversation_messages(conversation_id)
+        db_messages = conversation_service.get_conversation_messages(conversation_id_int)
         for msg in db_messages:
             messages.append({"role": msg.role, "content": msg.content})
     
@@ -59,28 +62,33 @@ async def stream_chat(
     async def generate_response() -> AsyncGenerator[str, None]:
         full_response = ""
         
-        # Send conversation ID first
-        yield f"data: {json.dumps({'type': 'conversation_id', 'conversation_id': conversation_id})}\n\n"
+        # Send conversation ID and bot info
+        yield f"data: {{\"type\": \"conversation_id\", \"conversation_id\": {conversation_id_int}, \"bot\": \"Rajan Bot\"}}\n\n"
         
         try:
+            # Get real LLM response
             async for chunk in chat_service.stream_chat_response(messages, use_search=use_search):
-                full_response += chunk
-                yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
-                # Small delay to make streaming visible
-                await asyncio.sleep(0.01)
+                if chunk:
+                    full_response += chunk
+                    yield f"data: {{\"type\": \"content\", \"content\": {json.dumps(chunk)}}}\n\n"
+                    # Small delay for smooth streaming
+                    await asyncio.sleep(0.01)
             
             # Save assistant response
-            assistant_message = MessageCreate(
-                role="assistant",
-                content=full_response,
-                conversation_id=conversation_id
-            )
-            conversation_service.add_message(assistant_message)
+            if full_response:
+                assistant_message = MessageCreate(
+                    role="assistant",
+                    content=full_response,
+                    conversation_id=conversation_id_int
+                )
+                conversation_service.add_message(assistant_message)
             
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            yield f"data: {{\"type\": \"done\"}}\n\n"
             
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+            error_msg = f"I apologize, but I'm having trouble connecting to AI services. Error: {str(e)}"
+            yield f"data: {{\"type\": \"content\", \"content\": {json.dumps(error_msg)}}}\n\n"
+            yield f"data: {{\"type\": \"done\"}}\n\n"
     
     return StreamingResponse(
         generate_response(),
@@ -90,5 +98,7 @@ async def stream_chat(
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "*",
+            "X-Bot-Name": "Rajan Bot",
+            "X-Bot-Version": "3.0-Clean-LLM"
         }
     )

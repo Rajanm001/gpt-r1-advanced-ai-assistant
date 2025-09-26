@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.models import Conversation, Message
 from app.models.schemas import ConversationCreate, MessageCreate
-from typing import List, Optional
+from typing import List, Optional, cast
 
 class ConversationService:
     def __init__(self, db: Session):
@@ -40,8 +40,10 @@ class ConversationService:
         self.db.refresh(db_message)
         
         # Update conversation timestamp
-        if db_message.conversation_id:
-            conversation = self.get_conversation(db_message.conversation_id)
+        conversation_id_from_msg = getattr(db_message, 'conversation_id', None)
+        if conversation_id_from_msg is not None:
+            conversation_id_int = cast(int, conversation_id_from_msg)
+            conversation = self.get_conversation(conversation_id_int)
             if conversation:
                 self.db.commit()
         
