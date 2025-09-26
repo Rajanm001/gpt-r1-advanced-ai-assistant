@@ -20,7 +20,7 @@ async def get_conversations(
 
 @router.post("/conversations", response_model=Conversation)
 async def create_conversation(
-    conversation: ConversationCreate,
+    conversation: ConversationCreate = ConversationCreate(),
     db: Session = Depends(get_db)
 ):
     """Create a new conversation"""
