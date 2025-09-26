@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: chatgpt_postgres
+    environment:
+      POSTGRES_USER: chatgpt_user
+      POSTGRES_PASSWORD: chatgpt_password
+      POSTGRES_DB: chatgpt_clone
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatgpt_network
+
+  backend:
+    build: 
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: chatgpt_backend
+    environment:
+      DATABASE_URL: postgresql://chatgpt_user:chatgpt_password@postgres:5432/chatgpt_clone
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ../backend:/app
+    networks:
+      - chatgpt_network
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: chatgpt_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - chatgpt_network
+
+volumes:
+  postgres_data:
+
+networks:
+  chatgpt_network:
+    driver: bridge
