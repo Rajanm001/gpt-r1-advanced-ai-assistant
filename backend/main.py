@@ -31,6 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Include routers - Enhanced chat as primary
 app.include_router(enhanced_chat_router, prefix="/api", tags=["Enhanced Rajan Bot Chat"])
 app.include_router(chat_router, prefix="/api/v1", tags=["Legacy Chat"])  # Keep legacy for compatibility  
