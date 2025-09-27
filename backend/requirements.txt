@@ -1,13 +1,22 @@
-# 🚀 Ultimate Production ChatGPT Clone - Backend Requirementsfastapi==0.104.1fastapi==0.104.1fastapi>=0.104.1
+# FastAPI ChatGPT Clone - Backend Requirements# 🚀 Ultimate Production ChatGPT Clone - Backend Requirementsfastapi==0.104.1fastapi==0.104.1fastapi>=0.104.1
 
-# ✅ Minimal, Production-Ready Dependencies
+
+
+fastapi==0.104.1# ✅ Minimal, Production-Ready Dependencies
 
 uvicorn[standard]==0.24.0
 
-fastapi==0.104.1
+pydantic==2.5.0uvicorn[standard]==0.24.0
 
-uvicorn[standard]==0.24.0  httpx==0.25.2uvicorn[standard]==0.24.0uvicorn[standard]>=0.24.0
+httpx==0.25.2
 
+aiosqlite==0.19.0fastapi==0.104.1
+
+asyncpg==0.29.0
+
+python-multipart==0.0.6uvicorn[standard]==0.24.0  httpx==0.25.2uvicorn[standard]==0.24.0uvicorn[standard]>=0.24.0
+
+python-dotenv==1.0.0
 httpx==0.25.2
 
 pydantic==2.5.0pydantic==2.5.0
