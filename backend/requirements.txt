@@ -1,0 +1,41 @@
+# 🚀 Ultimate Production ChatGPT Clone - Backend Requirementsfastapi==0.104.1fastapi==0.104.1fastapi>=0.104.1
+
+# ✅ Minimal, Production-Ready Dependencies
+
+uvicorn[standard]==0.24.0
+
+fastapi==0.104.1
+
+uvicorn[standard]==0.24.0  httpx==0.25.2uvicorn[standard]==0.24.0uvicorn[standard]>=0.24.0
+
+httpx==0.25.2
+
+pydantic==2.5.0pydantic==2.5.0
+
+
+
+# Database (SQLite included with Python)python-multipart==0.0.6httpx==0.25.2sqlalchemy>=2.0.0
+
+# For PostgreSQL production upgrade: asyncpg==0.29.0
+requests==2.31.0
+
+sqlalchemy==2.0.23pydantic==2.5.0alembic>=1.12.0
+
+alembic==1.12.1
+
+python-dotenv==1.0.0python-multipart==0.0.6pydantic>=2.0.0
+
+sse-starlette==1.6.5openai>=1.0.0
+
+aiosqlite==0.19.0python-dotenv>=1.0.0
+httpx>=0.25.0
+duckduckgo-search>=3.9.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+httpx==0.25.2
+requests==2.31.0
+sse-starlette>=1.6.0
+aiosqlite>=0.19.0
+requests>=2.31.0

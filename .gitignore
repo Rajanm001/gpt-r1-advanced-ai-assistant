@@ -1,0 +1,289 @@
+# Production .gitignore for ChatGPT Clone# Python# Pythonnode_modules/
+
+
+
+# Python__pycache__/
+
+__pycache__/
+
+*.py[cod]*.py[cod]__pycache__/.next/
+
+*$py.class
+
+*.so*$py.class
+
+.Python
+
+build/*.so*.py[cod]dist/
+
+develop-eggs/
+
+dist/.Python
+
+downloads/
+
+eggs/build/*$py.classbuild/
+
+.eggs/
+
+lib/develop-eggs/
+
+lib64/
+
+parts/dist/*.so*.log
+
+sdist/
+
+var/downloads/
+
+wheels/
+
+*.egg-info/eggs/.Python.env
+
+.installed.cfg
+
+*.egg.eggs/
+
+MANIFEST
+
+lib/build/.env.local
+
+# Virtual environments
+
+.envlib64/
+
+.env.local
+
+.env.development.localparts/develop-eggs/.env.development.local
+
+.env.test.local
+
+.env.production.localsdist/
+
+.venv
+
+env/var/dist/.env.test.local
+
+venv/
+
+ENV/wheels/
+
+env.bak/
+
+venv.bak/pip-wheel-metadata/downloads/.env.production.local
+
+
+
+# Node.jsshare/python-wheels/
+
+node_modules/
+
+npm-debug.log**.egg-info/eggs/__pycache__/
+
+yarn-debug.log*
+
+yarn-error.log*.installed.cfg
+
+lerna-debug.log*
+
+*.egg.eggs/*.pyc
+
+# Next.js
+
+.next/MANIFEST
+
+out/
+
+lib/*.pyo
+
+# Production builds
+
+dist/# PyInstaller
+
+build/
+
+*.manifestlib64/*.pyd
+
+# Logs
+
+logs/*.spec
+
+*.log
+
+parts/.Python
+
+# Database files (exclude data, keep structure)
+
+*.db-journal# Installer logs
+
+*.db-wal
+
+*.db-shmpip-log.txtsdist/env/
+
+
+
+# IDEs and editorspip-delete-this-directory.txt
+
+.vscode/
+
+.idea/var/venv/
+
+*.swp
+
+*.swo# Unit test / coverage reports
+
+*~
+
+.DS_Storehtmlcov/wheels/.venv/
+
+Thumbs.db
+
+.tox/
+
+# Temporary files
+
+*.tmp.nox/share/python-wheels/pip-log.txt
+
+*.temp
+
+.coverage
+
+# Docker
+
+.docker/.coverage.**.egg-info/pip-delete-this-directory.txt
+
+
+
+# Backup files.cache
+
+*.bak
+
+*.backupnosetests.xml.installed.cfg.DS_Store
+
+*.old
+coverage.xml
+
+*.cover*.eggThumbs.db
+
+*.py,cover
+
+.hypothesis/MANIFEST*.db
+
+.pytest_cache/
+
+*.sqlite
+
+# Virtual environments
+
+.env# Virtual environments*.sqlite3
+
+.venv
+
+env/venv/.pytest_cache/
+
+venv/
+
+ENV/env/.coverage
+
+env.bak/
+
+venv.bak/ENV/htmlcov/
+
+
+
+# IDEs.mypy_cache/
+
+.vscode/
+
+.idea/# Database files.dmypy.json
+
+*.swp
+
+*.swo*.dbdmypy.json
+
+*~*.sqlite
+
+*.sqlite3
+
+# OS
+
+.DS_Store# Node.js
+
+.DS_Store?node_modules/
+
+._*npm-debug.log*
+
+.Spotlight-V100yarn-debug.log*
+
+.Trashesyarn-error.log*
+
+ehthumbs.dblerna-debug.log*
+
+Thumbs.db.pnpm-debug.log*
+
+
+
+# Node.js# Next.js
+
+node_modules/.next/
+
+npm-debug.log*out/
+
+yarn-debug.log*
+
+yarn-error.log*# Environment variables
+
+lerna-debug.log*.env
+
+.env.local
+
+# Next.js.env.development.local
+
+.next/.env.test.local
+
+out/.env.production.local
+
+
+
+# Production builds# IDEs
+
+dist/.vscode/
+
+build/.idea/
+
+*.swp
+
+# Environment files*.swo
+
+.env.local
+
+.env.development.local# OS
+
+.env.test.local.DS_Store
+
+.env.production.localThumbs.db
+
+
+
+# Database# Logs
+
+*.dblogs/
+
+*.sqlite*.log
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Docker
+.docker/
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
