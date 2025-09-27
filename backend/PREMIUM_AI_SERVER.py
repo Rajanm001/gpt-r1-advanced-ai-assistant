@@ -26,7 +26,7 @@ if not OPENROUTER_API_KEY:
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL_NAME = "microsoft/wizardlm-2-8x22b"
 
-app = FastAPI(title="Premium AI Assistant")
+app = FastAPI(title="Rajan AI Assistant API")
 
 # CORS middleware - optimized for performance
 app.add_middleware(
@@ -92,12 +92,10 @@ def root():
 def health():
     return {
         "status": "healthy",
-        "service": "Premium AI Assistant",
+        "service": "Rajan AI Assistant", 
         "performance": "High-speed responses enabled",
         "timestamp": datetime.now().isoformat()
-    }
-
-@app.get("/api/v1/conversations")
+    }@app.get("/api/v1/conversations")
 def get_conversations():
     """Fast conversation retrieval"""
     conn = sqlite3.connect("conversations.db")
@@ -137,6 +135,47 @@ def create_conversation(request: dict):
         "id": conversation_id, 
         "title": title, 
         "created_at": datetime.now().isoformat()
+    }
+
+@app.post("/api/v1/chat")
+async def assignment_chat_endpoint(request: ChatRequest):
+    """Assignment-specific chat endpoint - redirects to main chat"""
+    return await smart_chat_stream(request)
+
+@app.get("/api/v1/conversations/{conversation_id}")
+async def get_conversation_messages(conversation_id: str):
+    """Get message history for a specific conversation"""
+    conn = sqlite3.connect("conversations.db")
+    cursor = conn.cursor()
+    
+    # Verify conversation exists
+    cursor.execute("SELECT id FROM conversations WHERE id = ?", (conversation_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Get messages
+    cursor.execute("""
+        SELECT id, role, content, timestamp 
+        FROM messages 
+        WHERE conversation_id = ? 
+        ORDER BY timestamp ASC
+    """, (conversation_id,))
+    
+    messages = []
+    for row in cursor.fetchall():
+        messages.append({
+            "id": row[0],
+            "role": row[1], 
+            "content": row[2],
+            "timestamp": row[3]
+        })
+    
+    conn.close()
+    return {
+        "conversation_id": conversation_id,
+        "messages": messages,
+        "total": len(messages)
     }
 
 @app.post("/api/chat")

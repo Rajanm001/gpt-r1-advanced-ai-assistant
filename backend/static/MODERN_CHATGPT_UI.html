@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT-Style AI Assistant | Modern Dark UI</title>
+    <title>Rajan AI Assistant | Advanced AI Chat Interface</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
@@ -18,9 +18,9 @@
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0a0a;
+            color: #ececec;
             height: 100vh;
             overflow: hidden;
             position: relative;
@@ -34,33 +34,41 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(120, 219, 226, 0.06) 0%, transparent 50%);
+                radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
             pointer-events: none;
+            animation: gradientShift 20s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
         
         .theme-controls {
             position: fixed;
-            top: 15px;
-            right: 15px;
+            top: 20px;
+            left: 20px;
             display: flex;
-            gap: 6px;
+            flex-direction: column;
+            gap: 8px;
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(15px);
-            padding: 8px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
         
         .theme-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             border: 2px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             position: relative;
         }
         
@@ -71,14 +79,32 @@
         
         .theme-btn.active {
             border-color: #fff;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
         }
         
-        .theme-blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .theme-purple { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
-        .theme-green { background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%); }
-        .theme-orange { background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%); }
-        .theme-red { background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%); }
+        .theme-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: center;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        
+        .theme-blue { 
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        }
+        .theme-purple { 
+            background: linear-gradient(135deg, #8b5cf6 0%, #5b21b6 100%);
+        }
+        .theme-green { 
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
+        .theme-orange { 
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .theme-red { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
         
         .container {
             display: flex;
@@ -99,14 +125,15 @@
         }
         
         .logo {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
             margin-bottom: 30px;
             text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.5px;
         }
         
         .new-chat-btn {
@@ -213,12 +240,14 @@
         
         .message-content {
             flex: 1;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             position: relative;
+            font-size: 15px;
+            line-height: 1.6;
         }
         
         .message-content::before {
@@ -252,17 +281,19 @@
             background: transparent;
             border: none;
             outline: none;
-            color: #ffffff;
-            font-size: 16px;
-            padding: 20px 60px 20px 20px;
-            font-family: 'Inter', sans-serif;
+            color: #ececec;
+            font-size: 15px;
+            padding: 18px 60px 18px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
             resize: none;
             min-height: 24px;
             max-height: 200px;
+            line-height: 1.5;
         }
         
         .chat-input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(236, 236, 236, 0.4);
+            font-weight: 400;
         }
         
         .send-btn {
@@ -351,13 +382,34 @@
             display: block;
             overflow-x: auto;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.5;
         }
         
         code {
             background: rgba(255, 255, 255, 0.1);
             padding: 2px 6px;
             border-radius: 4px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+        }
+        
+        .message-content p {
+            margin: 0 0 8px 0;
+            line-height: 1.6;
+            font-size: 15px;
+            color: #ececec;
+        }
+        
+        .message-content ul, .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .message-content li {
+            margin: 4px 0;
+            line-height: 1.6;
         }
         
         /* Scrollbar Styling */
@@ -412,17 +464,27 @@
 <body class="theme-blue">
     <!-- Theme Controls -->
     <div class="theme-controls">
-        <div class="theme-btn theme-blue active" data-theme="blue"></div>
-        <div class="theme-btn theme-purple" data-theme="purple"></div>
-        <div class="theme-btn theme-green" data-theme="green"></div>
-        <div class="theme-btn theme-orange" data-theme="orange"></div>
-        <div class="theme-btn theme-red" data-theme="red"></div>
+        <div class="theme-btn theme-blue active" data-theme="blue">
+            <div class="theme-label">Blue</div>
+        </div>
+        <div class="theme-btn theme-purple" data-theme="purple">
+            <div class="theme-label">Purple</div>
+        </div>
+        <div class="theme-btn theme-green" data-theme="green">
+            <div class="theme-label">Green</div>
+        </div>
+        <div class="theme-btn theme-orange" data-theme="orange">
+            <div class="theme-label">Orange</div>
+        </div>
+        <div class="theme-btn theme-red" data-theme="red">
+            <div class="theme-label">Red</div>
+        </div>
     </div>
 
     <div class="container">
         <!-- Sidebar -->
         <div class="sidebar">
-            <div class="logo">🤖 AI Assistant</div>
+            <div class="logo">🚀 Rajan AI Assistant</div>
             <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
             <div class="chat-history" id="chatHistory">
                 <!-- Chat history will be populated here -->
@@ -432,23 +494,23 @@
         <!-- Main Chat Area -->
         <div class="main-chat">
             <div class="chat-header">
-                <h2>AI Assistant</h2>
-                <p style="opacity: 0.7; margin-top: 5px;">Advanced AI • Real-time responses</p>
+                <h2>Rajan AI Assistant</h2>
+                <p style="opacity: 0.7; margin-top: 5px;">Advanced Intelligence • Premium Experience</p>
             </div>
             
             <div class="chat-messages" id="chatMessages">
                 <div class="message">
-                    <div class="message-avatar assistant-avatar">🤖</div>
+                    <div class="message-avatar assistant-avatar">🚀</div>
                     <div class="message-content">
-                        <p>Hello! I'm your AI assistant. I can help you with various tasks including:</p>
+                        <p>Hello! I'm Rajan AI Assistant, your advanced AI companion. I can help you with:</p>
                         <ul style="margin: 15px 0; padding-left: 20px;">
-                            <li>Answering questions and providing explanations</li>
-                            <li>Writing and editing content</li>
-                            <li>Coding assistance and debugging</li>
-                            <li>Creative writing and brainstorming</li>
-                            <li>Analysis and problem-solving</li>
+                            <li>💡 Intelligent conversations and explanations</li>
+                            <li>✍️ Content creation and editing</li>
+                            <li>💻 Programming assistance and code review</li>
+                            <li>🎨 Creative writing and brainstorming</li>
+                            <li>🔍 Research, analysis, and problem-solving</li>
                         </ul>
-                        <p>How can I assist you today?</p>
+                        <p>Ready to assist you with anything you need! What would you like to explore today?</p>
                     </div>
                 </div>
             </div>
@@ -459,12 +521,12 @@
                     <span></span>
                     <span></span>
                 </div>
-                AI is thinking...
+                Rajan AI is thinking...
             </div>
             
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
-                    <textarea class="chat-input" id="chatInput" placeholder="Type your message here..." rows="1"></textarea>
+                    <textarea class="chat-input" id="chatInput" placeholder="Ask Rajan AI anything..." rows="1"></textarea>
                     <button class="send-btn" id="sendBtn" onclick="sendMessage()">▶</button>
                 </div>
             </div>
@@ -669,8 +731,9 @@
                 
                 // Read the stream
                 const reader = response.body.getReader();
-                const decoder = new TextDecoder();
+                const decoder = new TextDecoder('utf-8');
                 let buffer = '';
+                let fullResponse = '';
                 
                 while (true) {
                     const { value, done } = await reader.read();
@@ -688,11 +751,15 @@
                             try {
                                 const parsed = JSON.parse(data);
                                 if (parsed.content) {
-                                    messageContent.innerHTML = marked.parse(messageContent.textContent + parsed.content);
-                                    // Apply syntax highlighting
-                                    messageContent.querySelectorAll('pre code').forEach(block => {
-                                        hljs.highlightElement(block);
-                                    });
+                                    // Clean the content to ensure proper text display
+                                    const cleanContent = parsed.content
+                                        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '') // Remove control characters
+                                        .replace(/\uFEFF/g, ''); // Remove BOM
+                                    
+                                    fullResponse += cleanContent;
+                                    
+                                    // Update display with clean text (not markdown yet)
+                                    messageContent.textContent = fullResponse;
                                     
                                     // Scroll to bottom
                                     document.getElementById('chatMessages').scrollTop = 
@@ -703,6 +770,19 @@
                             }
                         }
                     }
+                }
+                
+                // After streaming is complete, apply markdown rendering
+                if (fullResponse.trim()) {
+                    messageContent.innerHTML = marked.parse(fullResponse);
+                    // Apply syntax highlighting
+                    messageContent.querySelectorAll('pre code').forEach(block => {
+                        hljs.highlightElement(block);
+                    });
+                    
+                    // Final scroll to bottom
+                    document.getElementById('chatMessages').scrollTop = 
+                        document.getElementById('chatMessages').scrollHeight;
                 }
                 
                 // Reload conversations to show updated list
@@ -720,20 +800,24 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
             
-            const avatar = role === 'user' ? '👤' : '🤖';
+            const avatar = role === 'user' ? '👤' : '🚀';
             const avatarClass = role === 'user' ? 'user-avatar' : 'assistant-avatar';
+            
+            // For streaming messages, don't apply markdown until complete
+            const displayContent = role === 'assistant' && content === '' ? '' : 
+                                  role === 'assistant' ? marked.parse(content) : content;
             
             messageDiv.innerHTML = `
                 <div class="message-avatar ${avatarClass}">${avatar}</div>
                 <div class="message-content">
-                    <p>${role === 'assistant' ? marked.parse(content) : content}</p>
+                    <p>${displayContent}</p>
                 </div>
             `;
             
             chatMessages.appendChild(messageDiv);
             
-            // Apply syntax highlighting for assistant messages
-            if (role === 'assistant') {
+            // Apply syntax highlighting for assistant messages with content
+            if (role === 'assistant' && content) {
                 messageDiv.querySelectorAll('pre code').forEach(block => {
                     hljs.highlightElement(block);
                 });
