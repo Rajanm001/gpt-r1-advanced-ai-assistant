@@ -1,12 +1,76 @@
-# Production .gitignore for ChatGPT Clone# Python# Pythonnode_modules/
+# Production .gitignore for ChatGPT Clone
 
-
-
-# Python__pycache__/
-
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-*.py[cod]*.py[cod]__pycache__/.next/
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# API Keys and Secrets
+secrets/
+keys/
+config/secrets.json
 
 *$py.class
 
