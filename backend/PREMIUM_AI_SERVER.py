@@ -340,7 +340,7 @@ def get_smart_fallback_response(user_message: str) -> str:
         return f"I understand you're asking about '{user_message[:50]}...' - I'm here to help! While I'm experiencing a temporary connection issue, I can still assist you with many tasks. Could you provide more details about what you need help with?"
 
 if __name__ == "__main__":
-    print("🚀 Starting Premium AI Assistant...")
+    print("🚀 Starting Rajan AI Assistant...")
     print(f"🤖 Model: {MODEL_NAME}")
     print("⚡ High-performance mode enabled")
     print("🧠 Smart response system active")
