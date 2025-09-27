@@ -11,36 +11,11 @@ import uuid
 from datetime import datetime
 from typing import Optional
 import os
+import asyncio
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-import httpx
-import uvicorn
-import json
-import sqlite3
-import uuid
-from datetime import datetime
-from typing import Optional
-import os
-from dotenv import load_dotenv
+app = FastAPI(title="AI Assistant API")
 
-# Load environment variables
-load_dotenv()
-
-# Get API key from environment (more secure)
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY environment variable is required")
-    
-OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "microsoft/wizardlm-2-8x22b")
-
-app = FastAPI(title="ChatGPT Clone API")
-
-# CORS middleware
+# CORS middleware for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,23 +27,35 @@ app.add_middleware(
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Configuration
+OPENROUTER_API_KEY = "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"
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+MODEL_NAME = "microsoft/wizardlm-2-8x22b"
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
 
 def init_db():
+    """Initialize SQLite database"""
     conn = sqlite3.connect("conversations.db")
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS conversations (
-        id TEXT PRIMARY KEY, title TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        id TEXT PRIMARY KEY, 
+        title TEXT, 
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
-        id TEXT PRIMARY KEY, conversation_id TEXT, role TEXT, content TEXT, 
+        id TEXT PRIMARY KEY, 
+        conversation_id TEXT, 
+        role TEXT, 
+        content TEXT, 
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
     conn.commit()
     conn.close()
 
+# Initialize database on startup
 init_db()
 
 @app.get("/")
@@ -90,6 +77,7 @@ def health():
 
 @app.get("/api/v1/conversations")
 def get_conversations():
+    """Get all conversations"""
     conn = sqlite3.connect("conversations.db")
     cursor = conn.cursor()
     cursor.execute("SELECT id, title, created_at FROM conversations ORDER BY created_at DESC")
@@ -99,6 +87,7 @@ def get_conversations():
 
 @app.post("/api/v1/conversations")
 def create_conversation(request: dict):
+    """Create new conversation"""
     conversation_id = str(uuid.uuid4())
     title = request.get("title", "New Conversation")
     conn = sqlite3.connect("conversations.db")
@@ -110,10 +99,11 @@ def create_conversation(request: dict):
 
 @app.post("/api/chat")
 async def chat_stream(request: ChatRequest):
-    """Enhanced streaming chat endpoint"""
+    """Enhanced streaming chat endpoint - Fast & Smart AI responses"""
     
     conversation_id = request.conversation_id or str(uuid.uuid4())
     
+    # Database operations
     conn = sqlite3.connect("conversations.db")
     cursor = conn.cursor()
     
@@ -129,49 +119,58 @@ async def chat_stream(request: ChatRequest):
                    (message_id, conversation_id, "user", request.message))
     
     # Get conversation history
-    cursor.execute("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC", 
+    cursor.execute("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC LIMIT 20", 
                    (conversation_id,))
     messages = [{"role": role, "content": content} for role, content in cursor.fetchall()]
     
     conn.commit()
     conn.close()
     
-    async def generate():
+    async def generate_response():
+        """Generate smart, fast AI responses"""
+        
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost:8000",
-            "X-Title": "ChatGPT Clone"
+            "X-Title": "AI Assistant"
         }
         
+        # Optimized payload for fast, smart responses
         payload = {
             "model": MODEL_NAME,
             "messages": messages,
             "stream": True,
             "temperature": 0.7,
-            "max_tokens": 2000
+            "max_tokens": 2000,
+            "top_p": 0.9,
+            "frequency_penalty": 0.1,
+            "presence_penalty": 0.1
         }
         
         full_response = ""
-        print(f"🤖 Streaming from OpenRouter for: {request.message}...")
+        print(f"🤖 Processing: {request.message[:50]}...")
         
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            timeout = httpx.Timeout(60.0, connect=10.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 async with client.stream("POST", f"{OPENROUTER_BASE_URL}/chat/completions", 
                                        headers=headers, json=payload) as response:
                     
                     if response.status_code != 200:
                         error_text = await response.aread()
-                        error_text = error_text.decode('utf-8')
-                        print(f"❌ OpenRouter API Error: {response.status_code} - {error_text}")
-                        yield f"data: {json.dumps({'error': f'API Error {response.status_code}: {error_text}'})}\n\n"
+                        error_msg = error_text.decode('utf-8')
+                        print(f"❌ API Error: {response.status_code} - {error_msg}")
+                        yield f"data: {json.dumps({'error': f'Sorry, I encountered an error. Please try again.'})}\n\n"
                         return
                     
+                    print("✅ Streaming AI response...")
                     async for line in response.aiter_lines():
                         if line.startswith("data: "):
                             data = line[6:]
                             if data.strip() == "[DONE]":
                                 break
+                                
                             try:
                                 json_data = json.loads(data)
                                 if "choices" in json_data and json_data["choices"]:
@@ -179,33 +178,57 @@ async def chat_stream(request: ChatRequest):
                                     if content:
                                         full_response += content
                                         yield f"data: {json.dumps({'content': content, 'conversation_id': conversation_id})}\n\n"
+                                        # Small delay for smooth streaming
+                                        await asyncio.sleep(0.01)
                             except json.JSONDecodeError:
+                                continue
+                            except Exception as e:
+                                print(f"⚠️ Parse error: {e}")
                                 continue
             
             # Save AI response to database
-            if full_response:
+            if full_response.strip():
                 conn = sqlite3.connect("conversations.db")
                 cursor = conn.cursor()
-                message_id = str(uuid.uuid4())
+                ai_message_id = str(uuid.uuid4())
                 cursor.execute("INSERT INTO messages (id, conversation_id, role, content) VALUES (?, ?, ?, ?)",
-                               (message_id, conversation_id, "assistant", full_response))
+                               (ai_message_id, conversation_id, "assistant", full_response))
                 conn.commit()
                 conn.close()
-                print(f"✅ AI response saved to database")
+                print(f"✅ Response saved: {len(full_response)} characters")
             
             yield f"data: {json.dumps({'done': True, 'conversation_id': conversation_id})}\n\n"
             
+        except httpx.TimeoutException:
+            print("❌ Request timeout")
+            yield f"data: {json.dumps({'error': 'Request timed out. Please try again.'})}\n\n"
         except Exception as e:
-            print(f"❌ Error in chat stream: {str(e)}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            print(f"❌ Unexpected error: {str(e)}")
+            yield f"data: {json.dumps({'error': 'I encountered an unexpected error. Please try again.'})}\n\n"
     
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(
+        generate_response(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*"
+        }
+    )
 
 if __name__ == "__main__":
-    print("🚀 Starting ChatGPT Clone Server...")
+    print("🚀 Starting Advanced AI Assistant...")
+    print("✨ Fast, Smart, and Responsive")
     print(f"🤖 Model: {MODEL_NAME}")
-    print("✅ OpenRouter API Integration")
     print("🌐 Frontend: http://localhost:8000/static/MODERN_CHATGPT_UI.html")
     print("📡 Server: http://localhost:8000")
-    print("💚 Health Check: http://localhost:8000/health")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("💚 Health: http://localhost:8000/health")
+    print("=" * 50)
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=8000,
+        log_level="info",
+        access_log=True
+    )
